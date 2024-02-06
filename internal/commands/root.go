@@ -45,6 +45,7 @@ func init() {
 	rootCmd.Flags().StringP("system", "s", "", "set a system prompt")
 }
 
+// TODO: support image input with URL and file
 func runRootCmd(cmd *cobra.Command, args []string) {
 	// TODO: move getAPIKey to its own package
 	key := getAPIKey(cmd)
