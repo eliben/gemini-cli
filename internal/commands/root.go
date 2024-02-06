@@ -6,7 +6,6 @@ import (
 	"io"
 	"log"
 	"os"
-	"strings"
 
 	"github.com/google/generative-ai-go/genai"
 	"github.com/mattn/go-isatty"
@@ -39,25 +38,34 @@ func Execute() int {
 func init() {
 	rootCmd.PersistentFlags().String("key", "", "API key for Google AI")
 	rootCmd.PersistentFlags().String("model", "gemini-pro", "model to use")
+	rootCmd.Flags().StringP("system", "s", "", "set a system prompt")
 }
 
 func runRootCmd(cmd *cobra.Command, args []string) {
 	key := getAPIKey(cmd)
 
-	var prompt string
+	// Build up parts of prompt.
+	var promptParts []genai.Part
+
+	sysPrompt, _ := cmd.Flags().GetString("system")
+	if sysPrompt != "" {
+		promptParts = append(promptParts, genai.Text(sysPrompt))
+	}
+
 	if !isatty.IsTerminal(os.Stdin.Fd()) {
 		b, err := io.ReadAll(os.Stdin)
 		if err != nil {
 			log.Fatal(err)
 		}
-		prompt = string(b)
+		promptParts = append(promptParts, genai.Text(string(b)))
 	}
 
 	if len(args) >= 1 {
-		prompt = prompt + " " + args[0]
+		promptParts = append(promptParts, genai.Text(args[0]))
 	}
-	if len(strings.TrimSpace(prompt)) == 0 {
-		log.Fatal("empty prompt")
+
+	if len(promptParts) == 0 {
+		log.Fatal("expect a prompt from stdin and/or command-line argument")
 	}
 
 	ctx := context.Background()
@@ -81,7 +89,7 @@ func runRootCmd(cmd *cobra.Command, args []string) {
 	}
 
 	// TODO: no-stream flag?
-	iter := model.GenerateContentStream(ctx, genai.Text(prompt))
+	iter := model.GenerateContentStream(ctx, promptParts...)
 	for {
 		resp, err := iter.Next()
 		if err == iterator.Done {
