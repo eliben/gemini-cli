@@ -42,6 +42,7 @@ func init() {
 }
 
 func runRootCmd(cmd *cobra.Command, args []string) {
+	// TODO: move getAPIKey to its own package
 	key := getAPIKey(cmd)
 
 	// Build up parts of prompt.
