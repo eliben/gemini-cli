@@ -36,6 +36,7 @@ func Execute() int {
 
 func init() {
 	rootCmd.PersistentFlags().String("key", "", "API key for Google AI")
+	rootCmd.PersistentFlags().String("model", "gemini-pro", "model to use")
 }
 
 func runRootCmd(cmd *cobra.Command, args []string) {
@@ -52,8 +53,8 @@ func runRootCmd(cmd *cobra.Command, args []string) {
 	}
 	defer client.Close()
 
-	// TODO: this is the default model, but make it configurable
-	model := client.GenerativeModel("gemini-pro")
+	modelName, _ := cmd.Flags().GetString("model")
+	model := client.GenerativeModel(modelName)
 	model.SafetySettings = []*genai.SafetySetting{
 		{
 			Category:  genai.HarmCategoryDangerousContent,
