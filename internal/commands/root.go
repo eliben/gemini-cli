@@ -3,10 +3,13 @@ package commands
 import (
 	"context"
 	"fmt"
+	"io"
 	"log"
 	"os"
+	"strings"
 
 	"github.com/google/generative-ai-go/genai"
+	"github.com/mattn/go-isatty"
 	"github.com/spf13/cobra"
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
@@ -19,8 +22,7 @@ var rootCmd = &cobra.Command{
 	Short: "Interact with GoogleAI's Gemini LLMs through the command line",
 	Long: `This tool lets you interact with Google's Gemini LLMs from the
 command-line.`,
-	Args: cobra.ExactArgs(1),
-	Run:  runRootCmd,
+	Run: runRootCmd,
 }
 
 // Execute adds all child commands to the root command and sets flags
@@ -42,10 +44,22 @@ func init() {
 func runRootCmd(cmd *cobra.Command, args []string) {
 	key := getAPIKey(cmd)
 
-	if len(args) < 1 {
-		log.Fatal("expect at least one argument: <prompt>")
+	var prompt string
+	if !isatty.IsTerminal(os.Stdin.Fd()) {
+		b, err := io.ReadAll(os.Stdin)
+		if err != nil {
+			log.Fatal(err)
+		}
+		prompt = string(b)
 	}
-	prompt := args[0]
+
+	if len(args) >= 1 {
+		prompt = prompt + " " + args[0]
+	}
+	if len(strings.TrimSpace(prompt)) == 0 {
+		log.Fatal("empty prompt")
+	}
+
 	ctx := context.Background()
 	client, err := genai.NewClient(ctx, option.WithAPIKey(key))
 	if err != nil {

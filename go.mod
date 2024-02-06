@@ -5,6 +5,7 @@ go 1.21.1
 require (
 	github.com/google/generative-ai-go v0.6.0
 	github.com/google/go-cmp v0.6.0
+	github.com/mattn/go-isatty v0.0.20
 	github.com/spf13/cobra v1.8.0
 	google.golang.org/api v0.162.0
 )
