@@ -8,6 +8,7 @@ import (
 
 	"github.com/google/generative-ai-go/genai"
 	"github.com/spf13/cobra"
+	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
 )
 
@@ -64,23 +65,30 @@ func runRootCmd(cmd *cobra.Command, args []string) {
 		},
 	}
 
-	resp, err := model.GenerateContent(ctx, genai.Text(prompt))
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	if len(resp.Candidates) < 1 {
-		fmt.Println("<empty response from model>")
-	} else {
-		c := resp.Candidates[0]
-		if c.Content != nil {
-			for _, part := range c.Content.Parts {
-				fmt.Println(part)
-			}
-		} else {
+	// TODO: no-stream flag?
+	iter := model.GenerateContentStream(ctx, genai.Text(prompt))
+	for {
+		resp, err := iter.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			log.Fatal(err)
+		}
+		if len(resp.Candidates) < 1 {
 			fmt.Println("<empty response from model>")
+		} else {
+			c := resp.Candidates[0]
+			if c.Content != nil {
+				for _, part := range c.Content.Parts {
+					fmt.Print(part)
+				}
+			} else {
+				fmt.Println("<empty response from model>")
+			}
 		}
 	}
+	fmt.Println()
 }
 
 // getAPIToken obtains the API token from a flag or a default env var, and
