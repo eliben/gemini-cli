@@ -16,12 +16,16 @@ import (
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	// TODO: usage here
-	Use:   "gemini-cli",
+	// This is the usage for the plain root command without subcommands.
+	Use:   "gemini-cli <prompt>",
 	Short: "Interact with GoogleAI's Gemini LLMs through the command line",
 	Long: `This tool lets you interact with Google's Gemini LLMs from the
 command-line.`,
-	Run: runRootCmd,
+	Args: cobra.ArbitraryArgs,
+	Run:  runRootCmd,
+	CompletionOptions: cobra.CompletionOptions{
+		DisableDefaultCmd: true,
+	},
 }
 
 // Execute adds all child commands to the root command and sets flags
