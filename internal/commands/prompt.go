@@ -18,16 +18,17 @@ import (
 var promptCmd = &cobra.Command{
 	// This is the usage for the plain root command without subcommands.
 	Use:   "prompt <prompt>",
-	Short: "(default command) Send the prompt to a Gemini model",
-	Long: `This tool lets you interact with Google's Gemini LLMs from the
-command-line.`,
+	Short: "Send a prompt to a Gemini model",
+	Long: `Send a prompt to the LLM. The prompt can be provided in an argument,
+through stdin, or both; in case both are provided, the prompt sent to the
+LLM is a concatenation of the stdin contents, followed by the argument.`,
 	Run: runPromptCmd,
 }
 
 func init() {
 	rootCmd.AddCommand(promptCmd)
 
-	chatCmd.Flags().StringP("system", "s", "", "set a system prompt")
+	promptCmd.Flags().StringP("system", "s", "", "set a system prompt")
 }
 
 // TODO: support image input with URL and file
