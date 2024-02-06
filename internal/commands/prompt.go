@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/eliben/gemini-cli/internal/apikey"
 	"github.com/google/generative-ai-go/genai"
 	"github.com/mattn/go-isatty"
 	"github.com/spf13/cobra"
@@ -31,8 +32,7 @@ func init() {
 
 // TODO: support image input with URL and file
 func runPromptCmd(cmd *cobra.Command, args []string) {
-	// TODO: move getAPIKey to its own package
-	key := getAPIKey(cmd)
+	key := apikey.Get(cmd)
 
 	// Build up parts of prompt.
 	var promptParts []genai.Part
@@ -102,22 +102,4 @@ func runPromptCmd(cmd *cobra.Command, args []string) {
 		}
 	}
 	fmt.Println()
-}
-
-// getAPIToken obtains the API token from a flag or a default env var, and
-// returns it. It fails with log.Fatal if neither method produces a non-empty
-// key.
-func getAPIKey(cmd *cobra.Command) string {
-	token, _ := cmd.Flags().GetString("key")
-	if len(token) > 0 {
-		return token
-	}
-
-	key := os.Getenv("API_KEY")
-	if len(key) > 0 {
-		return key
-	}
-
-	log.Fatal("Unable to obtain API key for Google AI; use --key or API_KEY env var")
-	return ""
 }
