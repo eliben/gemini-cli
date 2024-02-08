@@ -1,9 +1,13 @@
-# Basic invocation of the prompt command and its alias
+# Basic invocation of the prompt command and its aliases
 
 exec gemini-cli prompt 'I am a pomeranian; what kind of mammal am I?'
 
 stdout '(?i:(dog|canine))'
 
 exec gemini-cli p 'what genus do cats belong to?'
+
+stdout '(?i:feli)'
+
+exec gemini-cli ask 'what genus do cats belong to?'
 
 stdout '(?i:feli)'

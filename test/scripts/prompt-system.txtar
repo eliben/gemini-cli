@@ -7,4 +7,3 @@ stdout '(?i:(azul|rojo|amarillo|verde))'
 
 exec gemini-cli prompt 'list the 3 most common colors'
 stdout '(?i:(red|blue|green))'
-
