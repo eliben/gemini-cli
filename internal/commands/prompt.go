@@ -17,8 +17,9 @@ import (
 
 var promptCmd = &cobra.Command{
 	// This is the usage for the plain root command without subcommands.
-	Use:   "prompt <prompt>",
-	Short: "Send a prompt to a Gemini model",
+	Use:     "prompt <prompt>",
+	Aliases: []string{"p"},
+	Short:   "Send a prompt to a Gemini model",
 	Long: `Send a prompt to the LLM. The prompt can be provided in an argument,
 through stdin, or both; in case both are provided, the prompt sent to the
 LLM is a concatenation of the stdin contents, followed by the argument.`,
