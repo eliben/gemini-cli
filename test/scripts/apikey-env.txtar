@@ -1,0 +1,18 @@
+# By default, all tests run with API_KEY set to a valid key. Here we try
+# disabling the key to observe an error.
+
+env API_KEY=
+
+! exec gemini-cli prompt 'how many eggs are in a dozen?'
+stderr 'Unable to obtain API'
+
+# ... but we can still pass it explicitly, taking an extra valid key
+# from AUX_API_KEY
+exec gemini-cli prompt --key $AUX_API_KEY 'how many eggs are in a dozen'
+stdout 12
+
+# ... or by setting it anew
+env API_KEY=$AUX_API_KEY
+
+exec gemini-cli prompt 'how many eggs are in a dozen?'
+stdout 12

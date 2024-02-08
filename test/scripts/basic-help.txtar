@@ -1,0 +1,18 @@
+# This is a basic smoke-test that the testscript system is working; it's
+# just testing that some of the commands are hooked up with their help.
+
+exec gemini-cli help
+
+stdout 'This tool lets you interact'
+stdout 'Usage'
+stdout 'prompt'
+
+exec gemini-cli help prompt
+
+stdout 'Send a prompt to the LLM'
+stdout 'set a system prompt'
+
+exec gemini-cli prompt -h
+
+stdout 'Send a prompt to the LLM'
+stdout 'set a system prompt'

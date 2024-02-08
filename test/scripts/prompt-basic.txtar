@@ -1,0 +1,7 @@
+exec gemini-cli prompt 'I am a pomeranian; what kind of mammal am I?'
+
+stdout '(?i:(dog|canine))'
+
+exec gemini-cli p 'what genus do cats belong to?'
+
+stdout '(?i:feli)'
