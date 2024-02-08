@@ -1,0 +1,10 @@
+# prompt command with --system flag
+
+exec gemini-cli prompt --system 'answer in spanish' 'list the 3 most common colors'
+stdout '(?i:(azul|rojo|amarillo|verde))'
+
+# for reference, the same question w/o system prompt
+
+exec gemini-cli prompt 'list the 3 most common colors'
+stdout '(?i:(red|blue|green))'
+
