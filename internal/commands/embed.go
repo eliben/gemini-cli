@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/binary"
+	"encoding/json"
 	"fmt"
 	"io"
 	"log"
@@ -27,13 +28,11 @@ func init() {
 	rootCmd.AddCommand(embedCmd)
 
 	// TODO: options:
-	// -c for content
-	// -m for specifying model
-	// --format for output format (base64 etc)
+	// --input / -i for providing a file
 
 	embedCmd.Flags().StringP("content", "c", "", "content to embed")
 	embedCmd.Flags().StringP("model", "m", "embedding-001", "name of embedding model to use")
-	embedCmd.Flags().StringP("format", "", "float", "format for embedding output: float, base64, blob")
+	embedCmd.Flags().StringP("format", "", "json", "format for embedding output: json, base64, blob")
 }
 
 func runEmbedCmd(cmd *cobra.Command, args []string) {
@@ -61,8 +60,12 @@ func runEmbedCmd(cmd *cobra.Command, args []string) {
 
 func emitEmbedding(w io.Writer, v []float32, format string) {
 	switch format {
-	case "float":
-		fmt.Fprintln(w, v)
+	case "json":
+		encoder := json.NewEncoder(w)
+		err := encoder.Encode(v)
+		if err != nil {
+			log.Fatal(err)
+		}
 	case "base64":
 		b := encodeEmbedding(v)
 		encoder := base64.NewEncoder(base64.StdEncoding, w)
