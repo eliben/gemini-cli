@@ -15,7 +15,6 @@ import (
 	"google.golang.org/api/option"
 )
 
-// chatCmd represents the chat command
 var chatCmd = &cobra.Command{
 	Use:   "chat",
 	Short: "Interactive chat with a model",

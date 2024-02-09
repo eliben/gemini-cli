@@ -16,7 +16,6 @@ import (
 )
 
 var promptCmd = &cobra.Command{
-	// This is the usage for the plain root command without subcommands.
 	Use:     "prompt <prompt>",
 	Aliases: []string{"p", "ask"},
 	Short:   "Send a prompt to a Gemini model",
