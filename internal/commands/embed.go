@@ -19,16 +19,13 @@ import (
 
 var embedCmd = &cobra.Command{
 	Use:   "embed",
-	Short: "Embed content using an embedding model",
-	Long:  `Use a Gemini embedding model to embed content in various forms`,
+	Short: "Embed an input using an embedding model",
+	Long:  `Use a Gemini embedding model to embed a single string of content`,
 	Run:   runEmbedCmd,
 }
 
 func init() {
 	rootCmd.AddCommand(embedCmd)
-
-	// TODO: options:
-	// --input / -i for providing a file
 
 	embedCmd.Flags().StringP("content", "c", "", "content to embed")
 	embedCmd.Flags().StringP("model", "m", "embedding-001", "name of embedding model to use")
