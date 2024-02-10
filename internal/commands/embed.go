@@ -29,10 +29,37 @@ func init() {
 
 	embedCmd.Flags().StringP("content", "c", "", "content to embed")
 	embedCmd.Flags().StringP("model", "m", "embedding-001", "name of embedding model to use")
-	embedCmd.Flags().StringP("format", "", "json", "format for embedding output: json, base64, blob")
+	embedCmd.Flags().String("format", "json", "format for embedding output: json, base64, blob")
+	embedCmd.Flags().String("db", "", "DB file to write embeddings into")
+	embedCmd.Flags().String("table", "embeddings", "DB table name to store embeddings into")
+	embedCmd.Flags().String("sql", "", "SQL mode with a query")
+	embedCmd.Flags().StringSlice("attach", nil, "additional DB to attach - specify <alias>,<filename> pair")
 }
 
+// TODO: API with SQLite
+// --db specifies output DB: in this case the output is written into this
+// DB, not stdout
+// in DB, ID should be string, to incorporate arbitrary IDs not just numeric,
+// especially with input files
+// then input is either taken as auto-deteecting file (passed as arg or piped
+// into stdin with -), or the DB itself with --sql flag. --attach also works.
+// --files will take input from file system dir
+// --table specifies which table to write results to
+// maybe --format should be repurposed for input file format?
+// output will always be JSON to stdout, or blob to DB
+//
+
 func runEmbedCmd(cmd *cobra.Command, args []string) {
+	if dbPath := mustGetStringFlag(cmd, "db"); dbPath != "" {
+		embedModeDB(cmd, args, dbPath)
+	} else if content := mustGetStringFlag(cmd, "content"); content != "" {
+		embedModeContent(cmd, args, content)
+	} else {
+		log.Fatal("expect either --db or --content")
+	}
+}
+
+func embedModeContent(cmd *cobra.Command, args []string, content string) {
 	key := apikey.Get(cmd)
 
 	ctx := context.Background()
@@ -43,16 +70,29 @@ func runEmbedCmd(cmd *cobra.Command, args []string) {
 
 	modelName, _ := cmd.Flags().GetString("model")
 	model := client.EmbeddingModel(modelName)
-
-	content, _ := cmd.Flags().GetString("content")
 	res, err := model.EmbedContent(ctx, genai.Text(content))
 
 	if emb := res.Embedding; emb != nil {
 		format, _ := cmd.Flags().GetString("format")
 		emitEmbedding(os.Stdout, emb.Values, format)
 	} else {
-		log.Fatal("got no embeddinb back from model")
+		log.Fatal("got no embedding back from model")
 	}
+}
+
+// embedModeDB runs the --db mode of the embed command.
+func embedModeDB(cmd *cobra.Command, args []string, dbPath string) {
+	//key := apikey.Get(cmd)
+
+	//ctx := context.Background()
+	//client, err := genai.NewClient(ctx, option.WithAPIKey(key))
+	//if err != nil {
+	//log.Fatal()
+	//}
+
+	//modelName, _ := cmd.Flags().GetString("model")
+	//model := client.EmbeddingModel(modelName)
+
 }
 
 func emitEmbedding(w io.Writer, v []float32, format string) {
