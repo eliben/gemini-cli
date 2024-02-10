@@ -3,6 +3,7 @@ package commands
 import (
 	"bytes"
 	"context"
+	"database/sql"
 	"encoding/base64"
 	"encoding/binary"
 	"encoding/json"
@@ -10,9 +11,11 @@ import (
 	"io"
 	"log"
 	"os"
+	"strings"
 
 	"github.com/eliben/gemini-cli/internal/apikey"
 	"github.com/google/generative-ai-go/genai"
+	_ "github.com/mattn/go-sqlite3"
 	"github.com/spf13/cobra"
 	"google.golang.org/api/option"
 )
@@ -59,6 +62,7 @@ func runEmbedCmd(cmd *cobra.Command, args []string) {
 	}
 }
 
+// embedModeContent runs the --content mode of the embed command.
 func embedModeContent(cmd *cobra.Command, args []string, content string) {
 	key := apikey.Get(cmd)
 
@@ -81,6 +85,83 @@ func embedModeContent(cmd *cobra.Command, args []string, content string) {
 // embedModeDB runs the --db mode of the embed command.
 func embedModeDB(cmd *cobra.Command, args []string, dbPath string) {
 	//key := apikey.Get(cmd)
+
+	sqlMode := mustGetStringFlag(cmd, "sql")
+
+	// TODO: implement input file mode, not just sql
+	db, err := sql.Open("sqlite3", dbPath)
+	if err != nil {
+		log.Fatalf("unable to open DB at %v", dbPath)
+	}
+	defer db.Close()
+
+	tableName := mustGetStringFlag(cmd, "table")
+	_, err = db.Exec(fmt.Sprintf(`
+  CREATE TABLE IF NOT EXISTS %s (
+	id TEXT PRIMARY KEY,
+	embedding BLOB
+	)`, tableName))
+	if err != nil {
+		log.Fatal("unable to create table in DB: ", tableName)
+	}
+
+	// We extract a list of [id, text] pairs - either from the DB itself (in --sql
+	// mode) or from an input file. These texts are going to be sent to the model
+	// for calculating embeddings. Each text is the concatenation of all the text
+	// columns following ID that the SQL query specifies.
+	var ids []string
+	var texts []string
+
+	if sqlMode != "" {
+		attachPair, _ := cmd.Flags().GetStringSlice("attach")
+		if len(attachPair) > 0 {
+			if len(attachPair) != 2 {
+				log.Fatal("expect <alias>,<db path> pair for --attach")
+			}
+
+			alias := attachPair[0]
+			path := attachPair[1]
+
+			attachStmt := fmt.Sprintf("ATTACH DATABASE '%v' as %v", path, alias)
+			_, err := db.Exec(attachStmt)
+			if err != nil {
+				log.Fatalf("unable to attach %v: %v", path, err)
+			}
+		}
+
+		rows, err := db.Query(sqlMode)
+		if err != nil {
+			log.Fatal("error running SQL query:", err)
+		}
+		defer rows.Close()
+
+		for rows.Next() {
+			// Scan all len(colNames) columns into the values slice.
+			values := scanRowIntoSlice(rows)
+			if len(values) < 2 {
+				log.Fatalf("expect at least 2 columns from query; got %v", len(values))
+			}
+
+			var rowTexts []string
+			for _, v := range values[1:] {
+				rowTexts = append(rowTexts, fmt.Sprintf("%v", v))
+			}
+			ids = append(ids, fmt.Sprintf("%v", values[0]))
+			texts = append(texts, strings.Join(rowTexts, " "))
+		}
+
+		// Check for errors from iterating over rows.
+		if err := rows.Err(); err != nil {
+			log.Fatal("error scanning DB:", err)
+		}
+	} else {
+
+		panic("only sql for now")
+	}
+
+	fmt.Println(ids)
+	fmt.Println(texts)
+	// TODO: now actually embed them
 
 	//ctx := context.Background()
 	//client, err := genai.NewClient(ctx, option.WithAPIKey(key))
@@ -145,4 +226,24 @@ func decodeEmbedding(b []byte) []float32 {
 		numbers = append(numbers, num)
 	}
 	return numbers
+}
+
+// scanRowIntoSlice scans a row into a slice of any.
+func scanRowIntoSlice(row *sql.Rows) []any {
+	colNames, err := row.Columns()
+	if err != nil {
+		panic(err)
+	}
+
+	values := make([]interface{}, len(colNames))
+	scanArgs := make([]interface{}, len(colNames))
+	for i := range values {
+		scanArgs[i] = &values[i]
+	}
+
+	err = row.Scan(scanArgs...)
+	if err != nil {
+		log.Fatal("error scanning row:", err)
+	}
+	return values
 }
