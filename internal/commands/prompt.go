@@ -38,8 +38,7 @@ func runPromptCmd(cmd *cobra.Command, args []string) {
 	// Build up parts of prompt.
 	var promptParts []genai.Part
 
-	sysPrompt, _ := cmd.Flags().GetString("system")
-	if sysPrompt != "" {
+	if sysPrompt := mustGetStringFlag(cmd, "system"); sysPrompt != "" {
 		promptParts = append(promptParts, genai.Text(sysPrompt))
 	}
 
@@ -66,8 +65,7 @@ func runPromptCmd(cmd *cobra.Command, args []string) {
 	}
 	defer client.Close()
 
-	modelName, _ := cmd.Flags().GetString("model")
-	model := client.GenerativeModel(modelName)
+	model := client.GenerativeModel(mustGetStringFlag(cmd, "model"))
 	model.SafetySettings = []*genai.SafetySetting{
 		{
 			Category:  genai.HarmCategoryDangerousContent,

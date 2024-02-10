@@ -68,13 +68,11 @@ func embedModeContent(cmd *cobra.Command, args []string, content string) {
 		log.Fatal()
 	}
 
-	modelName, _ := cmd.Flags().GetString("model")
-	model := client.EmbeddingModel(modelName)
+	model := client.EmbeddingModel(mustGetStringFlag(cmd, "model"))
 	res, err := model.EmbedContent(ctx, genai.Text(content))
 
 	if emb := res.Embedding; emb != nil {
-		format, _ := cmd.Flags().GetString("format")
-		emitEmbedding(os.Stdout, emb.Values, format)
+		emitEmbedding(os.Stdout, emb.Values, mustGetStringFlag(cmd, "format"))
 	} else {
 		log.Fatal("got no embedding back from model")
 	}
