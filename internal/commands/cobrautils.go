@@ -12,3 +12,14 @@ func mustGetStringFlag(cmd *cobra.Command, name string) string {
 	}
 	return v
 }
+
+// mustGetIntFlag gets an int flag value from cmd, and panics if this
+// results in an error (for example, if such a flag wasn't defined for the
+// command or if its type isn't int).
+func mustGetIntFlag(cmd *cobra.Command, name string) int {
+	v, err := cmd.Flags().GetInt(name)
+	if err != nil {
+		panic(err)
+	}
+	return v
+}

@@ -36,6 +36,7 @@ func init() {
 	embedCmd.Flags().String("db", "", "DB file to write embeddings into")
 	embedCmd.Flags().String("table", "embeddings", "DB table name to store embeddings into")
 	embedCmd.Flags().String("sql", "", "SQL mode with a query")
+	embedCmd.Flags().Int("batch-size", 32, "size of batches (number of rows) to send for embedding")
 	embedCmd.Flags().StringSlice("attach", nil, "additional DB to attach - specify <alias>,<filename> pair")
 }
 
@@ -84,7 +85,7 @@ func embedModeContent(cmd *cobra.Command, args []string, content string) {
 
 // embedModeDB runs the --db mode of the embed command.
 func embedModeDB(cmd *cobra.Command, args []string, dbPath string) {
-	//key := apikey.Get(cmd)
+	key := apikey.Get(cmd)
 
 	sqlMode := mustGetStringFlag(cmd, "sql")
 
@@ -158,19 +159,64 @@ func embedModeDB(cmd *cobra.Command, args []string, dbPath string) {
 
 		panic("only sql for now")
 	}
+	log.Printf("Found %d values to embed", len(texts))
 
-	fmt.Println(ids)
-	fmt.Println(texts)
-	// TODO: now actually embed them
+	ctx := context.Background()
+	client, err := genai.NewClient(ctx, option.WithAPIKey(key))
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer client.Close()
+	em := client.EmbeddingModel(mustGetStringFlag(cmd, "model"))
 
-	//ctx := context.Background()
-	//client, err := genai.NewClient(ctx, option.WithAPIKey(key))
-	//if err != nil {
-	//log.Fatal()
-	//}
+	batchSize := mustGetIntFlag(cmd, "batch-size")
+	numBatches := len(texts) / batchSize
+	if len(texts)%batchSize != 0 {
+		numBatches++
+	}
+	log.Printf("Splitting to %d batches", numBatches)
 
-	//modelName, _ := cmd.Flags().GetString("model")
-	//model := client.EmbeddingModel(modelName)
+	// Build a batch and send it for embedding. cursor points to the current
+	// text being added to a batch.
+	cursor := 0
+	embs := make([][]float32, 0, len(texts))
+	for bn := 0; bn < numBatches; bn++ {
+		batch := em.NewBatch()
+
+		sizeOfThisBatch := batchSize
+		if cursor+batchSize >= len(texts) {
+			sizeOfThisBatch = len(texts) - cursor
+		}
+		log.Printf("Embedding batch #%d / %d, size=%d", bn+1, numBatches, sizeOfThisBatch)
+
+		for i := 0; i < sizeOfThisBatch; i++ {
+			batch.AddContent(genai.Text(texts[cursor]))
+			cursor++
+		}
+
+		res, err := em.BatchEmbedContents(ctx, batch)
+		if err != nil {
+			log.Fatalf("error embedding batch %d: %v", bn, err)
+		}
+
+		if len(res.Embeddings) != sizeOfThisBatch {
+			log.Fatalf("expected %d embeddings for batch, got %d", sizeOfThisBatch, len(res.Embeddings))
+		}
+
+		for _, e := range res.Embeddings {
+			embs = append(embs, e.Values)
+		}
+	}
+
+	log.Printf("Collected %d embeddings; inserting into table %s", len(embs), tableName)
+	query := fmt.Sprintf("INSERT INTO %s VALUES (?, ?)", tableName)
+
+	for i, emb := range embs {
+		_, err = db.Exec(query, ids[i], encodeEmbedding(emb))
+		if err != nil {
+			log.Fatal("unable to insert embedding into DB", err)
+		}
+	}
 
 }
 
