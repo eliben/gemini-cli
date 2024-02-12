@@ -11,8 +11,10 @@ import (
 )
 
 // Format is the type of data we're expected to load into a table. The supported
-// formats are: CSV (comma-separated values), TSV (tab-separated values) and
-// JSON. FormatUnknown means that [LoadTable] will attempt to auto-detect the
+// formats are: CSV (comma-separated values), TSV (tab-separated values), JSON
+// (a JSON array of objects) and "line per JSON" which has a JSON object on each
+// line.
+// FormatUnknown means that [LoadTable] will attempt to auto-detect the
 // format based on the first bytes of the input.
 type Format int
 
@@ -21,6 +23,7 @@ const (
 	FormatCSV
 	FormatTSV
 	FormatJSON
+	FormatJSONLines
 )
 
 func (f Format) String() string {
@@ -33,6 +36,8 @@ func (f Format) String() string {
 		return "FormatTSV"
 	case FormatJSON:
 		return "FormatJSON"
+	case FormatJSONLines:
+		return "FormatJSONLines"
 	default:
 		panic("unknown format")
 	}
@@ -72,6 +77,8 @@ func LoadTable(r io.Reader, format Format) (Format, Table, error) {
 
 		if bytes.HasPrefix(bytes.TrimSpace(preview), []byte("[")) {
 			format = FormatJSON
+		} else if bytes.HasPrefix(bytes.TrimSpace(preview), []byte("{")) {
+			format = FormatJSONLines
 		} else {
 			firstLine, _, found := bytes.Cut(preview, []byte("\n"))
 			if !found {
@@ -92,6 +99,8 @@ func LoadTable(r io.Reader, format Format) (Format, Table, error) {
 	switch format {
 	case FormatJSON:
 		return loadFromJSON(br, format)
+	case FormatJSONLines:
+		return loadFromJSONLines(br, format)
 	case FormatCSV:
 		fallthrough
 	case FormatTSV:
@@ -139,6 +148,29 @@ func loadFromDelimeterSeparated(r io.Reader, format Format) (Format, Table, erro
 	}
 
 	return format, result, err
+}
+
+func loadFromJSONLines(r io.Reader, format Format) (Format, Table, error) {
+	var result Table
+
+	scanner := bufio.NewScanner(r)
+	for scanner.Scan() {
+		var obj map[string]any
+		if err := json.Unmarshal(scanner.Bytes(), &obj); err != nil {
+			return format, result, err
+		}
+
+		resultItem := make(Row)
+		for k, v := range obj {
+			resultItem[k] = fmt.Sprint(v)
+		}
+		result = append(result, resultItem)
+	}
+	if err := scanner.Err(); err != nil {
+		return format, nil, err
+	}
+
+	return format, result, nil
 }
 
 func loadFromJSON(r io.Reader, format Format) (Format, Table, error) {

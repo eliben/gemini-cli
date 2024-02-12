@@ -27,6 +27,9 @@ i	i	i	i	i
 
 var jsonSample1 = `[{"id": 20, "name": "joe"}, {"id": 44, "name": "ma"}]`
 
+var jsonLinesSample = `{"id": 99, "name": "fuhrman"}
+{"fine": true, "yes": "no"}`
+
 func TestValidInput(t *testing.T) {
 	var tests = []struct {
 		format     Format
@@ -54,6 +57,11 @@ func TestValidInput(t *testing.T) {
 			Table{
 				Row{"id": "20", "name": "joe"},
 				Row{"id": "44", "name": "ma"},
+			}},
+		{FormatJSONLines, jsonLinesSample, FormatJSONLines,
+			Table{
+				Row{"id": "99", "name": "fuhrman"},
+				Row{"fine": "true", "yes": "no"},
 			}},
 	}
 
