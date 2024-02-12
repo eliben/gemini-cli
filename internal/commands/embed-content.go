@@ -8,6 +8,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"strings"
 
 	"github.com/eliben/gemini-cli/internal/apikey"
 	"github.com/google/generative-ai-go/genai"
@@ -16,14 +17,22 @@ import (
 )
 
 var embedContentCmd = &cobra.Command{
-	Use:   "content",
+	Use:   "content [content or '-']",
 	Short: "Embed a single input using an embedding model",
-	Long:  `Use a Gemini embedding model to embed a single string of content`,
+	Long:  strings.TrimSpace(embedContentUsage),
 	Args:  cobra.ExactArgs(1),
 	Run:   runEmbedContentCmd,
 }
 
-// TODO: add reading from '-' here for stdin
+var embedContentUsage = `
+Use a Gemini embedding model to embed a single string of content,
+emitting the result to stdout. Use the --format flag to control
+the format of the emitted embedding.
+
+The content is passed as a string on the command-line (quote it
+if spaces are included), or read from stding if '-' is provided.
+`
+
 func init() {
 	embedCmd.AddCommand(embedContentCmd)
 	embedContentCmd.Flags().String("format", "json", "format for embedding output: json, base64, blob")
@@ -32,6 +41,14 @@ func init() {
 func runEmbedContentCmd(cmd *cobra.Command, args []string) {
 	key := apikey.Get(cmd)
 	content := args[0]
+
+	if content == "-" {
+		b, err := io.ReadAll(cmd.InOrStdin())
+		if err != nil {
+			log.Fatal("error reading content from stdin:", err)
+		}
+		content = string(b)
+	}
 
 	ctx := context.Background()
 	client, err := genai.NewClient(ctx, option.WithAPIKey(key))

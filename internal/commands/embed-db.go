@@ -29,7 +29,6 @@ var embedDBCmd = &cobra.Command{
 
 func init() {
 	embedCmd.AddCommand(embedDBCmd)
-	embedDBCmd.Flags().String("format", "json", "format for embedding output: json, base64, blob")
 	embedDBCmd.Flags().String("table", "embeddings", "DB table name to store embeddings into")
 	embedDBCmd.Flags().String("sql", "", "SQL mode with a query")
 	embedDBCmd.Flags().Int("batch-size", 32, "size of batches (number of rows) to send for embedding")

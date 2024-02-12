@@ -15,3 +15,14 @@ stdout 'V54G'
 
 exec gemini-cli embed content 'yet else' --format base64 -m embedding-001
 stdout 'l28l'
+
+stdin input.txt
+exec gemini-cli embed content -
+
+stdout '\['
+stdout '-0\.'
+stdout '0\.0'
+stdout '\]'
+
+-- input.txt --
+hello my friend, I write to you from Antarctica
