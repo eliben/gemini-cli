@@ -19,13 +19,32 @@ import (
 )
 
 var embedDBCmd = &cobra.Command{
-	// TODO: fix usage
-	Use:   "db",
+	Use:   "db <output DB path> [input file or '-']",
 	Short: "Embed a multiple inputs, storing results into a SQLite DB",
-	Long:  `TODO`,
+	Long:  strings.TrimSpace(embedDBUsage),
 	Args:  cobra.RangeArgs(1, 2),
 	Run:   runEmbedDBCmd,
 }
+
+var embedDBUsage = `
+Embed multiple texts and store the results into a SQLite DB.
+The path to the output DB is given as the first argument.
+
+This command has multiple modes of operation based on flags.
+With --sql, provide a SQL query to use on the DB itself. The
+query should specify at least 2 columns; the first is used as
+the ID for the resulting embedding; the rest are concatenated
+into a single text and the embedding is computed on this text.
+The --attach flag can provide an alternative DB file so the
+SQL query can read from it.
+
+When no --sql flag is provided, the input is read from a file
+provided as an argument (or '-', which reads from stdin). The
+format of the file should be either CSV, TSV (tab-separated),
+JSON or JSONLines (one line per JSON object). At least 2 columns
+are expected: one for ID, and the rest are concatenated as
+inputs to the embedding model.
+`
 
 func init() {
 	embedCmd.AddCommand(embedDBCmd)
