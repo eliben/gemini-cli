@@ -1,17 +1,17 @@
 # embed -c
 
-exec gemini-cli embed -c 'no more'
+exec gemini-cli embed content 'no more'
 
 stdout '\['
 stdout '-0\.'
 stdout '0\.0'
 stdout '\]'
 
-exec gemini-cli embed -c 'something else' --format base64
+exec gemini-cli embed content 'something else' --format base64
 
 # ... note: this can be sensitive to the stability of the default model's
 # output
 stdout 'V54G'
 
-exec gemini-cli embed -c 'yet else' --format base64 -m embedding-001
+exec gemini-cli embed content 'yet else' --format base64 -m embedding-001
 stdout 'l28l'

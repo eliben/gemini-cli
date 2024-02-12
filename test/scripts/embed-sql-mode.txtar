@@ -4,7 +4,7 @@
 stdin input.sql
 exec sqlite3 input.db
 
-exec gemini-cli embed --db input.db --sql 'select id, content from docs'
+exec gemini-cli embed db input.db --sql 'select id, content from docs'
 stderr 'Found 4 values'
 
 exec sqlite3 input.db '.tables'
