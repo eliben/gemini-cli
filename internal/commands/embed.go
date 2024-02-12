@@ -14,6 +14,7 @@ import (
 	"strings"
 
 	"github.com/eliben/gemini-cli/internal/apikey"
+	"github.com/eliben/gemini-cli/internal/tableloader"
 	"github.com/google/generative-ai-go/genai"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/spf13/cobra"
@@ -24,6 +25,7 @@ var embedCmd = &cobra.Command{
 	Use:   "embed",
 	Short: "Embed an input using an embedding model",
 	Long:  `Use a Gemini embedding model to embed a single string of content`,
+	Args:  cobra.MaximumNArgs(1),
 	Run:   runEmbedCmd,
 }
 
@@ -156,8 +158,45 @@ func embedModeDB(cmd *cobra.Command, args []string, dbPath string) {
 			log.Fatal("error scanning DB:", err)
 		}
 	} else {
+		if len(args) < 1 {
+			log.Fatal("when --sql is not passed, expect filename or '-' as argument")
+		}
+		inputFilename := args[0]
 
-		panic("only sql for now")
+		var inputReader io.Reader
+		if inputFilename == "-" {
+			inputReader = cmd.InOrStdin()
+		} else {
+			file, err := os.Open(inputFilename)
+			if err != nil {
+				log.Fatal("unable to open %v: %v", inputFilename, err)
+			}
+			inputReader = file
+		}
+
+		_, table, err := tableloader.LoadTable(inputReader, tableloader.FormatUnknown)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		for _, row := range table {
+			// It's mandatory to have an 'id'; the other columns will be concatenated
+			// into texts.
+			id, ok := row["id"]
+			if !ok {
+				log.Fatalf("expect input row to have 'id' column; got %v", row)
+			}
+
+			var rowTexts []string
+			for k, v := range row {
+				if k != "id" {
+					rowTexts = append(rowTexts, v)
+				}
+			}
+
+			ids = append(ids, id)
+			texts = append(texts, strings.Join(rowTexts, " "))
+		}
 	}
 	log.Printf("Found %d values to embed", len(texts))
 

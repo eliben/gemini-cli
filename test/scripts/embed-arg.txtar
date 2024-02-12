@@ -1,0 +1,30 @@
+# Test feeding a CSV file into the embed command
+
+exec gemini-cli embed --db out.db input.csv
+stderr 'Found 3 values'
+
+exists out.db
+
+exec sqlite3 out.db 'select count(*) from embeddings'
+stdout '3'
+
+# Now test feeding a CSV file through stdin with '-'
+stdin input2.csv
+exec gemini-cli embed --db out2.db -
+stderr 'Found 4 values'
+
+exec sqlite3 out2.db 'select count(*) from embeddings'
+stdout '4'
+
+-- input.csv --
+id,name,age
+3,luci,23
+4,merene,29
+5,pat,52
+
+-- input2.csv --
+id,name,age
+3,luci,23
+4,merene,29
+5,pat,52
+9,arre,14

@@ -2,7 +2,7 @@
 stdin qq.txt
 
 exec gemini-cli chat
-stdout '(?i:Spain.*larger.* than Austria)'
+stdout '(?i:Spain.*larger.*than Austria)'
 
 -- qq.txt --
 Hi, are you familiar with the countries Spain and Austria? Be very brief.
