@@ -1,0 +1,34 @@
+# Test that --attach works with --sql mode.
+
+stdin input.sql
+exec sqlite3 input.db
+
+stdin out.sql
+exec sqlite3 out.db
+
+exec gemini-cli embed --db out.db --attach inp,input.db --sql 'select id, content from inp.docs'
+stderr 'Found 4 values'
+
+exec sqlite3 input.db '.tables'
+stdout 'docs'
+
+exec sqlite3 out.db '.tables'
+stdout 'dodo.*embeddings'
+
+exec sqlite3 out.db 'select count(*) from embeddings'
+stdout '4'
+
+-- out.sql --
+CREATE TABLE dodo (id TEXT);
+
+-- input.sql --
+CREATE TABLE IF NOT EXISTS docs (
+  id TEXT PRIMARY KEY,
+  path TEXT,
+  content TEXT
+);
+
+INSERT INTO docs (id, path, content) VALUES ('1', 'file1.txt', 'This is the content of file1.txt.');
+INSERT INTO docs (id, path, content) VALUES ('2', '/some/path', 'Some path here');
+INSERT INTO docs (id, path, content) VALUES ('3', '/another/path', 'Another path here');
+INSERT INTO docs (id, path, content) VALUES ('4', '/CBj8VDcDl/KsauwOrqmf', 'ClzHyMIcfnYJRj39VZRu');

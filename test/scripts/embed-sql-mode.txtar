@@ -1,0 +1,25 @@
+# Test basic --sql mode: the embedding inputs are taken from the DB itself by
+# means of a custom SQL statement.
+
+stdin input.sql
+exec sqlite3 input.db
+
+exec gemini-cli embed --db input.db --sql 'select id, content from docs'
+stderr 'Found 4 values'
+
+exec sqlite3 input.db '.tables'
+stdout 'docs.*embeddings'
+exec sqlite3 input.db 'select count(*) from embeddings'
+stdout '4'
+
+-- input.sql --
+CREATE TABLE IF NOT EXISTS docs (
+  id TEXT PRIMARY KEY,
+  path TEXT,
+  content TEXT
+);
+
+INSERT INTO docs (id, path, content) VALUES ('1', 'file1.txt', 'This is the content of file1.txt.');
+INSERT INTO docs (id, path, content) VALUES ('2', '/some/path', 'Some path here');
+INSERT INTO docs (id, path, content) VALUES ('3', '/another/path', 'Another path here');
+INSERT INTO docs (id, path, content) VALUES ('4', '/CBj8VDcDl/KsauwOrqmf', 'ClzHyMIcfnYJRj39VZRu');
