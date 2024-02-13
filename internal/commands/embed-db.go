@@ -7,8 +7,10 @@ import (
 	"encoding/binary"
 	"fmt"
 	"io"
+	"io/fs"
 	"log"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/eliben/gemini-cli/internal/apikey"
@@ -52,13 +54,26 @@ func init() {
 	embedDBCmd.Flags().String("sql", "", "SQL mode with a query")
 	embedDBCmd.Flags().Int("batch-size", 32, "size of batches (number of rows) to send for embedding")
 	embedDBCmd.Flags().StringSlice("attach", nil, "additional DB to attach - specify <alias>,<filename> pair")
+	embedDBCmd.Flags().StringSlice("files", nil, strings.TrimSpace(`
+files to embed as a <root dir>,<glob> pair;
+the directory will be traversed recursively,
+picking all the files that match the glob`))
+	embedDBCmd.Flags().StringSlice("files-list", nil, `comma-separated list of files to embed`)
 }
+
+// TODO: "files" mode -- either dir,glob or list of files with file1,file2
 
 func runEmbedDBCmd(cmd *cobra.Command, args []string) {
 	key := apikey.Get(cmd)
 	dbPath := args[0]
 
 	sqlMode := mustGetStringFlag(cmd, "sql")
+	filesMode := len(mustGetStringSliceFlag(cmd, "files")) > 0 ||
+		len(mustGetStringSliceFlag(cmd, "files-list")) > 0
+
+	if sqlMode != "" && filesMode {
+		log.Fatal("--files* mode is mutually exclusive with --sql")
+	}
 
 	db, err := sql.Open("sqlite3", dbPath)
 	if err != nil {
@@ -84,7 +99,7 @@ func runEmbedDBCmd(cmd *cobra.Command, args []string) {
 	var texts []string
 
 	if sqlMode != "" {
-		attachPair, _ := cmd.Flags().GetStringSlice("attach")
+		attachPair := mustGetStringSliceFlag(cmd, "attach")
 		if len(attachPair) > 0 {
 			if len(attachPair) != 2 {
 				log.Fatal("expect <alias>,<db path> pair for --attach")
@@ -125,9 +140,12 @@ func runEmbedDBCmd(cmd *cobra.Command, args []string) {
 		if err := rows.Err(); err != nil {
 			log.Fatal("error scanning DB:", err)
 		}
+	} else if filesMode {
+		ids, texts = collectFiles(cmd)
+		fmt.Println(ids)
 	} else {
 		if len(args) < 2 {
-			log.Fatal("when --sql is not passed, expect filename or '-' as second argument")
+			log.Fatal("when --sql or --files* is not passed, expect filename or '-' as second argument")
 		}
 		inputFilename := args[1]
 
@@ -277,4 +295,73 @@ func scanRowIntoSlice(row *sql.Rows) []any {
 		log.Fatal("error scanning row:", err)
 	}
 	return values
+}
+
+// collectFiles reads files provided with the --files or --files-list flags
+// and generates a list of ids (file paths) and a corresponding list of texts
+// (file contents).
+func collectFiles(cmd *cobra.Command) ([]string, []string) {
+	filesList := mustGetStringSliceFlag(cmd, "files-list")
+	filesDirGlobPair := mustGetStringSliceFlag(cmd, "files")
+
+	var ids []string
+	var texts []string
+	if len(filesList) > 0 {
+		if len(filesDirGlobPair) > 0 {
+			log.Fatal("expect only one of --files & --files-list")
+		}
+
+		for _, path := range filesList {
+			b, err := os.ReadFile(path)
+			if err != nil {
+				log.Fatal(err)
+			}
+			ids = append(ids, path)
+			texts = append(texts, string(b))
+		}
+	} else if len(filesDirGlobPair) > 0 {
+		if len(filesDirGlobPair) != 2 {
+			log.Fatal("expect <root dir>,<glob> pair for --files")
+		}
+		rootDir := filesDirGlobPair[0]
+		glob := filesDirGlobPair[1]
+
+		fileInfo, err := os.Stat(rootDir)
+		if err != nil {
+			log.Fatal(err)
+		}
+		if !fileInfo.IsDir() {
+			log.Fatalf("expect directory as the first item provided to --files, got %v", rootDir)
+		}
+
+		visit := func(path string, d fs.DirEntry, err error) error {
+			if err != nil {
+				return err
+			}
+			if !d.IsDir() {
+				matched, err := filepath.Match(glob, d.Name())
+				if err != nil {
+					return err
+				}
+				if matched {
+					b, err := os.ReadFile(path)
+					if err != nil {
+						log.Fatal(err)
+					}
+					ids = append(ids, path)
+					texts = append(texts, string(b))
+				}
+			}
+			return nil
+		}
+
+		fmt.Println("visiting", rootDir)
+		err = filepath.WalkDir(rootDir, visit)
+		if err != nil {
+			log.Fatalf("error visiting %v: %v", rootDir, err)
+		}
+	} else {
+		panic("expect --files or --files-list")
+	}
+	return ids, texts
 }
