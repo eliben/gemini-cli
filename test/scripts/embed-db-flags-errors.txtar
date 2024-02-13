@@ -1,0 +1,16 @@
+# Various errors in 'embed db' due to passing bad flag combinations
+
+! exec gemini-cli embed db test1.db --files .,*.a --sql 'id, content from docs'
+stderr 'mutually exclusive'
+
+! exec gemini-cli embed db test1.db --files a.a,*.a
+stderr 'expect directory'
+
+! exec gemini-cli embed db test1.db --files-list a,a --sql 'id, content from docs'
+stderr 'mutually exclusive'
+
+! exec gemini-cli embed db test1.db --files-list a.a,.
+stderr 'is a directory'
+
+-- a.a --
+f1

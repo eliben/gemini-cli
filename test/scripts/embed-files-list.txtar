@@ -1,0 +1,32 @@
+# --files-list mode of 'embed db'
+
+exec gemini-cli embed db test1.db --files-list dir/foo.txt,dir/otherfile.md
+stderr 'Found 2 values'
+
+exec sqlite3 test1.db 'select id from embeddings'
+stdout 'dir/foo.txt'
+stdout 'dir/otherfile.md'
+
+exec gemini-cli embed db test2.db --files-list a.a,dir/foo.txt,dir/otherfile.md,x/b.a
+stderr 'Found 4 values'
+
+exec gemini-cli embed db test3.db --files-list a.a
+stderr 'Found 1 values'
+
+-- dir/foo.txt --
+foo foo
+
+-- dir/s1/s2/bar.txt --
+bar bar
+
+-- dir/subdir/xyz.txt --
+xyz xyz
+
+-- dir/otherfile.md --
+bad
+
+-- a.a --
+f1
+
+-- x/b.a --
+f2

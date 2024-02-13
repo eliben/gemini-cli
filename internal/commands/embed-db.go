@@ -61,8 +61,6 @@ picking all the files that match the glob`))
 	embedDBCmd.Flags().StringSlice("files-list", nil, `comma-separated list of files to embed`)
 }
 
-// TODO: "files" mode -- either dir,glob or list of files with file1,file2
-
 func runEmbedDBCmd(cmd *cobra.Command, args []string) {
 	key := apikey.Get(cmd)
 	dbPath := args[0]
@@ -142,7 +140,6 @@ func runEmbedDBCmd(cmd *cobra.Command, args []string) {
 		}
 	} else if filesMode {
 		ids, texts = collectFiles(cmd)
-		fmt.Println(ids)
 	} else {
 		if len(args) < 2 {
 			log.Fatal("when --sql or --files* is not passed, expect filename or '-' as second argument")
@@ -355,7 +352,6 @@ func collectFiles(cmd *cobra.Command) ([]string, []string) {
 			return nil
 		}
 
-		fmt.Println("visiting", rootDir)
 		err = filepath.WalkDir(rootDir, visit)
 		if err != nil {
 			log.Fatalf("error visiting %v: %v", rootDir, err)
