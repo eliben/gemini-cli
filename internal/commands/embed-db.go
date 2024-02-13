@@ -20,6 +20,11 @@ import (
 	"google.golang.org/api/option"
 )
 
+// TODO: implement
+// also --prefix flag
+// this is useful for the 'similar' searches
+// Then add tests for --metadata, --prefix and --store
+
 var embedDBCmd = &cobra.Command{
 	Use:   "db <output DB path> [input file or '-']",
 	Short: "Embed a multiple inputs, storing results into a SQLite DB",
@@ -51,14 +56,19 @@ inputs to the embedding model.
 func init() {
 	embedCmd.AddCommand(embedDBCmd)
 	embedDBCmd.Flags().String("table", "embeddings", "DB table name to store embeddings into")
-	embedDBCmd.Flags().String("sql", "", "SQL mode with a query")
 	embedDBCmd.Flags().Int("batch-size", 32, "size of batches (number of rows) to send for embedding")
+
+	embedDBCmd.Flags().String("sql", "", "SQL mode with a query")
 	embedDBCmd.Flags().StringSlice("attach", nil, "additional DB to attach - specify <alias>,<filename> pair")
+
 	embedDBCmd.Flags().StringSlice("files", nil, strings.TrimSpace(`
 files to embed as a <root dir>,<glob> pair;
 the directory will be traversed recursively,
 picking all the files that match the glob`))
 	embedDBCmd.Flags().StringSlice("files-list", nil, `comma-separated list of files to embed`)
+
+	embedDBCmd.Flags().Bool("store", false, `also store the original content in the embeddings table ('content' column)`)
+	embedDBCmd.Flags().String("metadata", "", `also store this metadata in the embeddings table ('metadata' column)`)
 }
 
 func runEmbedDBCmd(cmd *cobra.Command, args []string) {
@@ -80,11 +90,26 @@ func runEmbedDBCmd(cmd *cobra.Command, args []string) {
 	defer db.Close()
 
 	tableName := mustGetStringFlag(cmd, "table")
-	_, err = db.Exec(fmt.Sprintf(`
-  CREATE TABLE IF NOT EXISTS %s (
-	id TEXT PRIMARY KEY,
-	embedding BLOB
-	)`, tableName))
+
+	// Build up table schema based on passed flags
+	columns := []string{
+		"id TEXT PRIMARY KEY",
+		"embedding BLOB",
+	}
+
+	if mustGetBoolFlag(cmd, "store") {
+		columns = append(columns, "content TEXT")
+	}
+	if mustGetStringFlag(cmd, "metadata") != "" {
+		columns = append(columns, "metadata TEXT")
+	}
+
+	tableCreateSchema := strings.TrimSpace(fmt.Sprintf(`
+	CREATE TABLE IF NOT EXISTS %s (
+%s
+)`, tableName, strings.Join(columns, ",\n")))
+
+	_, err = db.Exec(tableCreateSchema)
 	if err != nil {
 		log.Fatal("unable to create table in DB: ", tableName)
 	}
@@ -231,10 +256,27 @@ func runEmbedDBCmd(cmd *cobra.Command, args []string) {
 	}
 
 	log.Printf("Collected %d embeddings; inserting into table %s", len(embs), tableName)
-	query := fmt.Sprintf("INSERT INTO %s VALUES (?, ?)", tableName)
+
+	numColumns := 2
+	if mustGetBoolFlag(cmd, "store") {
+		numColumns++
+	}
+	if mustGetStringFlag(cmd, "metadata") != "" {
+		numColumns++
+	}
+
+	query := fmt.Sprintf("INSERT INTO %s VALUES (%s)",
+		tableName, strings.Join(strings.Split(strings.Repeat("?", numColumns), ""), ", "))
 
 	for i, emb := range embs {
-		_, err = db.Exec(query, ids[i], encodeEmbedding(emb))
+		columns := []any{ids[i], encodeEmbedding(emb)}
+		if mustGetBoolFlag(cmd, "store") {
+			columns = append(columns, texts[i])
+		}
+		if metadata := mustGetStringFlag(cmd, "metadata"); metadata != "" {
+			columns = append(columns, metadata)
+		}
+		_, err = db.Exec(query, columns...)
 		if err != nil {
 			log.Fatal("unable to insert embedding into DB", err)
 		}

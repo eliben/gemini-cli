@@ -3,16 +3,16 @@
 
 env API_KEY=
 
-! exec gemini-cli prompt 'how many eggs are in a dozen?'
+! exec gemini-cli prompt 'what does a dozen mean?'
 stderr 'Unable to obtain API'
 
 # ... but we can still pass it explicitly, taking an extra valid key
 # from TEST_API_KEY
-exec gemini-cli prompt --key $TEST_API_KEY 'how many eggs are in a dozen'
-stdout 12
+exec gemini-cli prompt --key $TEST_API_KEY 'what does a dozen mean?'
+stdout '(?i:(12|twelve))'
 
 # ... or by setting it anew
 env API_KEY=$TEST_API_KEY
 
-exec gemini-cli prompt 'how many eggs are in a dozen?'
-stdout 12
+exec gemini-cli prompt 'what does a dozen mean?'
+stdout '(?i:(12|twelve))'

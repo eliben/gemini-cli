@@ -23,6 +23,16 @@ func mustGetIntFlag(cmd *cobra.Command, name string) int {
 	return v
 }
 
+// mustGetBoolFlag gets an bool flag value from cmd, and panics if this
+// results in an error.
+func mustGetBoolFlag(cmd *cobra.Command, name string) bool {
+	v, err := cmd.Flags().GetBool(name)
+	if err != nil {
+		panic(err)
+	}
+	return v
+}
+
 // mustGetStringSliceFlag gets an string slice flag value from cmd, and panics
 // if this results in an error.
 func mustGetStringSliceFlag(cmd *cobra.Command, name string) []string {
