@@ -3,9 +3,11 @@ package commands
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"io"
 	"log"
+	"os"
 	"slices"
 	"strings"
 
@@ -30,6 +32,7 @@ var embedSimilarUsage = `
 func init() {
 	embedCmd.AddCommand(embedSimilarCmd)
 	embedSimilarCmd.Flags().Int("topk", 5, "top K: how many most similar entries to return")
+	embedSimilarCmd.Flags().StringSlice("show", []string{"id", "score"}, "the columns to emit for the most similar DB entries")
 }
 
 // TODO: add comments here
@@ -85,11 +88,10 @@ func runEmbedSimilarCmd(cmd *cobra.Command, args []string) {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(columnNames)
 
 	type Entry struct {
-		cols       map[string]any
-		similarity float32
+		cols  map[string]any
+		score float32
 	}
 	var dbEntries []Entry
 
@@ -102,20 +104,36 @@ func runEmbedSimilarCmd(cmd *cobra.Command, args []string) {
 		}
 
 		entryEmb := decodeEmbedding(entryCols["embedding"].([]byte))
-		similarity := cosineSimilarity(entryEmb, contentEmb)
+		score := cosineSimilarity(entryEmb, contentEmb)
 
-		dbEntries = append(dbEntries, Entry{cols: entryCols, similarity: similarity})
+		dbEntries = append(dbEntries, Entry{cols: entryCols, score: score})
 	}
 
 	slices.SortFunc(dbEntries, func(a, b Entry) int {
 		// The similarity scores are in the range [0, 1], so scale them to get
 		// integers for comparison. Negate the result to get descending similarity.
-		return -int(100.0 * (a.similarity - b.similarity))
+		return -int(100.0 * (a.score - b.score))
 	})
 
+	showList := mustGetStringSliceFlag(cmd, "show")
 	for i := 0; i < mustGetIntFlag(cmd, "topk"); i++ {
-		// TODO: print something nicer
-		fmt.Println(dbEntries[i].cols["id"], dbEntries[i].similarity)
+		display := make(map[string]string)
+		for _, col := range showList {
+			if col == "score" {
+				display["score"] = fmt.Sprintf("%v", dbEntries[i].score)
+			} else {
+				entry, ok := dbEntries[i].cols[col]
+				if !ok {
+					log.Fatalf("no column '%v' to show", col)
+				}
+				display[col] = fmt.Sprintf("%v", entry)
+			}
+		}
+
+		enc := json.NewEncoder(os.Stdout)
+		if err := enc.Encode(display); err != nil {
+			log.Fatal(err)
+		}
 	}
 }
 
