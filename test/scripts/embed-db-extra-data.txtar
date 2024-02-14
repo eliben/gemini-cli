@@ -1,0 +1,67 @@
+# Tests varios extra data stored in DB, like --store, --metadata
+
+stdin input.sql
+exec sqlite3 out.db
+
+# --store flag to also store content
+exec gemini-cli embed db out.db --sql 'select id, content from docs' --store
+stderr 'Found 4 values'
+
+exec sqlite3 out.db '.schema embeddings'
+stdout 'content TEXT'
+
+exec sqlite3 out.db 'select content from embeddings where id=2'
+stdout 'Some path here'
+
+stdin input.sql
+exec sqlite3 out2.db
+
+# --metadata flag to store arbitrary metadata
+exec gemini-cli embed db out2.db --sql 'select id, content from docs' --metadata 'foo'
+stderr 'Found 4 values'
+
+exec sqlite3 out2.db '.schema embeddings'
+stdout 'metadata TEXT'
+
+exec sqlite3 out2.db 'select metadata from embeddings'
+stdout 'foo\nfoo\nfoo\nfoo'
+
+# --prefix to store more into the same DB with a different prefix
+exec gemini-cli embed db out2.db --sql 'select id, content from docs' --prefix 'other/' --metadata 'bar'
+stderr 'Found 4 values'
+
+exec sqlite3 out2.db 'select count(*) from embeddings'
+stdout '8'
+
+exec sqlite3 out2.db 'select id, metadata from embeddings'
+stdout '2|foo'
+stdout 'other/2|bar'
+
+# ... they should have the same embedding, even with different IDs!
+stdin emb-equal-query.sql
+exec sqlite3 out2.db
+stdout '1|true'
+stdout '2|true'
+stdout '3|true'
+stdout '4|true'
+
+-- input.sql --
+CREATE TABLE IF NOT EXISTS docs (
+  id TEXT PRIMARY KEY,
+  path TEXT,
+  content TEXT
+);
+
+INSERT INTO docs (id, path, content) VALUES ('1', 'file1.txt', 'This is the content of file1.txt.');
+INSERT INTO docs (id, path, content) VALUES ('2', '/some/path', 'Some path here');
+INSERT INTO docs (id, path, content) VALUES ('3', '/another/path', 'Another path here');
+INSERT INTO docs (id, path, content) VALUES ('4', '/CBj8VDcDl/KsauwOrqmf', 'ClzHyMIcfnYJRj39VZRu');
+
+-- emb-equal-query.sql --
+SELECT aa.id,
+  CASE
+    WHEN Aa.embedding = bb.embedding
+  THEN "true"
+  ELSE "false" END
+  AS EMBEqual
+  FROM Embeddings aa, embeddings bb WHERE aa.id = bb.id
