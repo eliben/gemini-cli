@@ -11,3 +11,7 @@ stdout '(?i:feli)'
 exec gemini-cli ask 'what genus do cats belong to?'
 
 stdout '(?i:feli)'
+
+exec gemini-cli p 'what genus do cats belong to?' --stream=false
+
+stdout '(?i:feli)'

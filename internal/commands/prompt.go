@@ -29,6 +29,7 @@ func init() {
 	rootCmd.AddCommand(promptCmd)
 
 	promptCmd.Flags().StringP("system", "s", "", "set a system prompt")
+	promptCmd.Flags().Bool("stream", true, "stream the response from the model")
 }
 
 // TODO: support image input with URL and file
@@ -77,13 +78,32 @@ func runPromptCmd(cmd *cobra.Command, args []string) {
 		},
 	}
 
-	// TODO: no-stream flag?
-	iter := model.GenerateContentStream(ctx, promptParts...)
-	for {
-		resp, err := iter.Next()
-		if err == iterator.Done {
-			break
+	if stream := mustGetBoolFlag(cmd, "stream"); stream {
+		iter := model.GenerateContentStream(ctx, promptParts...)
+		for {
+			resp, err := iter.Next()
+			if err == iterator.Done {
+				break
+			}
+			if err != nil {
+				log.Fatal(err)
+			}
+			if len(resp.Candidates) < 1 {
+				fmt.Println("<empty response from model>")
+			} else {
+				c := resp.Candidates[0]
+				if c.Content != nil {
+					for _, part := range c.Content.Parts {
+						fmt.Print(part)
+					}
+				} else {
+					fmt.Println("<empty response from model>")
+				}
+			}
 		}
+		fmt.Println()
+	} else {
+		resp, err := model.GenerateContent(ctx, promptParts...)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -93,12 +113,11 @@ func runPromptCmd(cmd *cobra.Command, args []string) {
 			c := resp.Candidates[0]
 			if c.Content != nil {
 				for _, part := range c.Content.Parts {
-					fmt.Print(part)
+					fmt.Println(part)
 				}
 			} else {
 				fmt.Println("<empty response from model>")
 			}
 		}
 	}
-	fmt.Println()
 }
