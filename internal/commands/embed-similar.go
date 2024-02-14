@@ -20,13 +20,24 @@ import (
 
 var embedSimilarCmd = &cobra.Command{
 	Use:   "similar <DB path> <content or '-'>",
-	Short: "",
+	Short: "Find items in the DB similar to the given content",
 	Long:  strings.TrimSpace(embedSimilarUsage),
 	Args:  cobra.ExactArgs(2),
 	Run:   runEmbedSimilarCmd,
 }
 
 var embedSimilarUsage = `
+Use vector embeddings to calculate similarity.
+
+The given content (argument or from standard input if '-' is passed) is embedded
+and compared to the items stored in the DB's 'embeddings' table. The most
+similar items are reported. This command expects the rows in the DB to have
+at least 'id' and 'embeddings' columns. By default, the 'id' of similar items
+is reported along with a similarity score; this can be controlled with the
+'--show' flag.
+
+The items are reported in JSONLines format (each entry is encoded as a JSON
+object and printed on a separate line).
 `
 
 func init() {
@@ -35,11 +46,11 @@ func init() {
 	embedSimilarCmd.Flags().StringSlice("show", []string{"id", "score"}, "the columns to emit for the most similar DB entries")
 }
 
-// TODO: add comments here
 func runEmbedSimilarCmd(cmd *cobra.Command, args []string) {
 	key := apikey.Get(cmd)
 	dbPath := args[0]
 
+	// Read content from argument or stdin
 	content := args[1]
 	if content == "-" {
 		b, err := io.ReadAll(cmd.InOrStdin())
@@ -68,9 +79,10 @@ func runEmbedSimilarCmd(cmd *cobra.Command, args []string) {
 	} else {
 		log.Fatal("got no embedding back from model")
 	}
-	_ = contentEmb
 
-	// Open the DB and scan all embeddings from it
+	// Open the DB and read items and their embeddings from the 'embeddings'
+	// table. For each item, calculate its cosine similarity to the content's
+	// embedding.
 	db, err := sql.Open("sqlite3", dbPath)
 	if err != nil {
 		log.Fatalf("unable to open DB at %v", dbPath)
@@ -89,6 +101,8 @@ func runEmbedSimilarCmd(cmd *cobra.Command, args []string) {
 		panic(err)
 	}
 
+	// After scanning, dbEntries will list all DB rows with their data in cols
+	// and their similarity score stored.
 	type Entry struct {
 		cols  map[string]any
 		score float32
@@ -109,6 +123,7 @@ func runEmbedSimilarCmd(cmd *cobra.Command, args []string) {
 		dbEntries = append(dbEntries, Entry{cols: entryCols, score: score})
 	}
 
+	// Sort by descending similarity score.
 	slices.SortFunc(dbEntries, func(a, b Entry) int {
 		// The similarity scores are in the range [0, 1], so scale them to get
 		// integers for comparison. Negate the result to get descending similarity.
