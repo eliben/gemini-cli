@@ -25,12 +25,12 @@ var embedContentCmd = &cobra.Command{
 }
 
 var embedContentUsage = `
-Use a Gemini embedding model to embed a single string of content,
-emitting the result to stdout. Use the --format flag to control
-the format of the emitted embedding.
+Use a Gemini embedding model to embed a single string of content, emitting the
+result to stdout. The --format flag controls the format of the emitted
+embedding.
 
-The content is passed as a string on the command-line (quote it
-if spaces are included), or read from stding if '-' is provided.
+The content is passed as a string on the command-line (quote it if spaces are
+included), or read from standard input if '-' is provided.
 `
 
 func init() {

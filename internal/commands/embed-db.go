@@ -20,11 +20,6 @@ import (
 	"google.golang.org/api/option"
 )
 
-// TODO: implement
-// also --prefix flag
-// this is useful for the 'similar' searches
-// Then add tests for --metadata, --prefix and --store
-
 var embedDBCmd = &cobra.Command{
 	Use:   "db <output DB path> [input file or '-']",
 	Short: "Embed a multiple inputs, storing results into a SQLite DB",
@@ -34,23 +29,22 @@ var embedDBCmd = &cobra.Command{
 }
 
 var embedDBUsage = `
-Embed multiple texts and store the results into a SQLite DB.
-The path to the output DB is given as the first argument.
+Embed multiple texts and store the results into a SQLite DB. The path to the
+output DB is given as the first argument. This command has multiple modes of
+operation based on flags.
 
-This command has multiple modes of operation based on flags.
-With --sql, provide a SQL query to use on the DB itself. The
-query should specify at least 2 columns; the first is used as
-the ID for the resulting embedding; the rest are concatenated
-into a single text and the embedding is computed on this text.
-The --attach flag can provide an alternative DB file so the
-SQL query can read from it.
-
-When no --sql flag is provided, the input is read from a file
-provided as an argument (or '-', which reads from stdin). The
-format of the file should be either CSV, TSV (tab-separated),
-JSON or JSONLines (one line per JSON object). At least 2 columns
-are expected: one for ID, and the rest are concatenated as
-inputs to the embedding model.
+* With --sql, provide a SQL query to use on the DB itself. The query should
+  specify at least 2 columns; the first is used as the ID for the resulting
+  embedding; the rest are concatenated into a single text and the embedding is
+  computed on this text. The --attach flag can provide an alternative DB file so
+  the SQL query can read from it.
+* With --files or --files-list, the inputs are taken from the filesystem, each
+  file becoming the contents to be embedded.
+* Otherwise, the input is read from a file provided as an argument (or '-',
+  which reads from standard input). The format of the file should be either CSV,
+  TSV (tab-separated), JSON or JSONLines (one line per JSON object). At least 2
+  columns are expected: one for ID, and the rest are concatenated as inputs to
+  the embedding model.
 `
 
 func init() {
@@ -69,6 +63,7 @@ picking all the files that match the glob`))
 
 	embedDBCmd.Flags().Bool("store", false, `also store the original content in the embeddings table ('content' column)`)
 	embedDBCmd.Flags().String("metadata", "", `also store this metadata in the embeddings table ('metadata' column)`)
+	embedDBCmd.Flags().String("prefix", "", `prepend a prefix to the stored ID of each row`)
 }
 
 func runEmbedDBCmd(cmd *cobra.Command, args []string) {
@@ -269,7 +264,12 @@ func runEmbedDBCmd(cmd *cobra.Command, args []string) {
 		tableName, strings.Join(strings.Split(strings.Repeat("?", numColumns), ""), ", "))
 
 	for i, emb := range embs {
-		columns := []any{ids[i], encodeEmbedding(emb)}
+		id := ids[i]
+		if prefix := mustGetStringFlag(cmd, "prefix"); prefix != "" {
+			id = prefix + id
+		}
+
+		columns := []any{id, encodeEmbedding(emb)}
 		if mustGetBoolFlag(cmd, "store") {
 			columns = append(columns, texts[i])
 		}
