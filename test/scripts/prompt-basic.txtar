@@ -1,17 +1,20 @@
 # Basic invocation of the prompt command and its aliases
 
 exec gemini-cli prompt 'I am a pomeranian; what kind of mammal am I?'
-
 stdout '(?i:(dog|canine))'
 
 exec gemini-cli p 'what genus do cats belong to?'
-
 stdout '(?i:feli)'
 
 exec gemini-cli ask 'what genus do cats belong to?'
-
 stdout '(?i:feli)'
 
 exec gemini-cli p 'what genus do cats belong to?' --stream=false
-
 stdout '(?i:feli)'
+
+# ... multiple prompts on the same command-line
+exec gemini-cli prompt 'I am a pomeranian' 'what kind of mammal am I?'
+stdout '(?i:(dog|canine))'
+
+exec gemini-cli prompt 'what is the next number in this sequence?' 'two' 'four' 'eight'
+stdout '(?i:(16|sixteen))'

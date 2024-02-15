@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"strings"
 
 	"github.com/eliben/gemini-cli/internal/apikey"
 	"github.com/google/generative-ai-go/genai"
@@ -16,13 +17,17 @@ var countTokCmd = &cobra.Command{
 	Use:     "counttok <content or '-'>",
 	Aliases: []string{"tokcount"},
 	Short:   "Count tokens in content",
-	Long: `Count the number of LLM tokens in the given content.
+	Args:    cobra.ExactArgs(1),
+	Long:    strings.TrimSpace(countTokUsage),
+	Run:     runCountTokCmd,
+}
+
+var countTokUsage = `
+Count the number of LLM tokens in the given content.
 
 The content is passed as a string on the command-line (quote it if spaces are
 included), or read from standard input if '-' is provided.
-`,
-	Run: runCountTokCmd,
-}
+`
 
 func init() {
 	rootCmd.AddCommand(countTokCmd)

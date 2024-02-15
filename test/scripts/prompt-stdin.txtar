@@ -1,12 +1,15 @@
 # Check that prompt works with stdin too
 
 stdin q1.txt
-exec gemini-cli prompt
+exec gemini-cli prompt -
 stdout '(?i:mars)'
 
 stdin q2.txt
-exec gemini-cli prompt 'what kind of mammal am i?'
+exec gemini-cli prompt - 'what kind of mammal am i?'
 stdout '(?i:(dog|canine))'
+
+! exec gemini-cli prompt 'say hi' - 'no' -
+stderr 'expect a single'
 
 -- q1.txt --
 Name all planets in the solar system

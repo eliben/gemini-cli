@@ -5,11 +5,10 @@ import (
 	"fmt"
 	"io"
 	"log"
-	"os"
+	"strings"
 
 	"github.com/eliben/gemini-cli/internal/apikey"
 	"github.com/google/generative-ai-go/genai"
-	"github.com/mattn/go-isatty"
 	"github.com/spf13/cobra"
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
@@ -18,15 +17,25 @@ import (
 // TODO: multi-part prompt (multiple arguments), can also be an opening for
 // images from files/URLs
 var promptCmd = &cobra.Command{
-	Use:     "prompt <prompt>",
+	Use:     "prompt <prompt or '-'>...",
 	Aliases: []string{"p", "ask"},
+	Args:    cobra.MinimumNArgs(1),
 	Short:   "Send a prompt to a Gemini model",
-	Long: `Send a prompt to the LLM. The prompt can be provided in an argument,
-through stdin, or both; in case both are provided, the prompt sent to the
-LLM is a concatenation of the stdin contents, followed by the argument.`,
-	Run: runPromptCmd,
+	Long:    strings.TrimSpace(promptUsage),
+	Run:     runPromptCmd,
 }
 
+var promptUsage = `
+Send a prompt to the LLM. The prompt can be provided in a sequence of arguments,
+one of which can be '-' for standard input.
+
+The prompts are sent as a sequence to the model in the order provided.
+If --system is provided, it's prepended to the other prompts.
+
+TODO: support images with filenames and URLs
+`
+
+// TODO: fix reading stdin from -
 func init() {
 	rootCmd.AddCommand(promptCmd)
 
@@ -34,7 +43,6 @@ func init() {
 	promptCmd.Flags().Bool("stream", true, "stream the response from the model")
 }
 
-// TODO: support image input with URL and file
 func runPromptCmd(cmd *cobra.Command, args []string) {
 	key := apikey.Get(cmd)
 
@@ -45,20 +53,22 @@ func runPromptCmd(cmd *cobra.Command, args []string) {
 		promptParts = append(promptParts, genai.Text(sysPrompt))
 	}
 
-	if !isatty.IsTerminal(os.Stdin.Fd()) {
-		b, err := io.ReadAll(os.Stdin)
-		if err != nil {
-			log.Fatal(err)
+	seenStdin := false
+	for _, arg := range args {
+		if arg == "-" {
+			if seenStdin {
+				log.Fatal("expect a single '-' in list of prompts")
+			}
+
+			b, err := io.ReadAll(cmd.InOrStdin())
+			if err != nil {
+				log.Fatal("error reading content from stdin:", err)
+			}
+			promptParts = append(promptParts, genai.Text(string(b)))
+			seenStdin = true
+		} else {
+			promptParts = append(promptParts, genai.Text(arg))
 		}
-		promptParts = append(promptParts, genai.Text(string(b)))
-	}
-
-	if len(args) >= 1 {
-		promptParts = append(promptParts, genai.Text(args[0]))
-	}
-
-	if len(promptParts) == 0 {
-		log.Fatal("expect a prompt from stdin and/or command-line argument")
 	}
 
 	ctx := context.Background()
