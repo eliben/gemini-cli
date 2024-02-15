@@ -15,6 +15,8 @@ import (
 	"google.golang.org/api/option"
 )
 
+// TODO: multi-part prompt (multiple arguments), can also be an opening for
+// images from files/URLs
 var promptCmd = &cobra.Command{
 	Use:     "prompt <prompt>",
 	Aliases: []string{"p", "ask"},

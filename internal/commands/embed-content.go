@@ -17,7 +17,7 @@ import (
 )
 
 var embedContentCmd = &cobra.Command{
-	Use:   "content [content or '-']",
+	Use:   "content <content or '-'>",
 	Short: "Embed a single input using an embedding model",
 	Long:  strings.TrimSpace(embedContentUsage),
 	Args:  cobra.ExactArgs(1),

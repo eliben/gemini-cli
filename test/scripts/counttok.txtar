@@ -1,0 +1,8 @@
+exec gemini-cli counttok 'ok'
+stdout '2'
+
+stdin input.txt
+exec gemini-cli tokcount -
+
+-- input.txt --
+this is a story about a fox and a hare
