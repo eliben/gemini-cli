@@ -9,6 +9,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"github.com/eliben/gemini-cli/internal/apikey"
@@ -18,8 +19,6 @@ import (
 	"google.golang.org/api/option"
 )
 
-// TODO: implement loading files from URL
-// improve documentation
 var promptCmd = &cobra.Command{
 	Use:     "prompt <prompt or '-'>...",
 	Aliases: []string{"p", "ask"},
@@ -30,13 +29,16 @@ var promptCmd = &cobra.Command{
 }
 
 var promptUsage = `
-Send a prompt to the LLM. The prompt can be provided in a sequence of arguments,
-one of which can be '-' for standard input.
+Send a prompt to the LLM. The prompt can be provided as a sequence of parts,
+each one a command-line argument.
 
-The prompts are sent as a sequence to the model in the order provided.
-If --system is provided, it's prepended to the other prompts.
+The arguments are sent as a sequence to the model in the order provided.
+If --system is provided, it's prepended to the other argument. An argument
+can be some quoted text, a name of an image file on the local filesystem or
+a URL pointing directly to an image file online. A special argument with
+the value '-' instructs the tool to read this prompt part from standard input.
+It can only appear once in a single invocation.
 
-TODO: support images with filenames and URLs
 If you're providing multi-modal prompts (e.g. with images), make sure to
 select an appropriate model like gemini-pro-vision
 (see https://ai.google.dev/models/gemini for a list of model names).
@@ -79,8 +81,6 @@ func runPromptCmd(cmd *cobra.Command, args []string) {
 			}
 			promptParts = append(promptParts, part)
 		} else if argLooksLikeFilename(arg) {
-			// TODO: this is too permissive... it will detect all URLs too!
-			// need a better heuristic
 			part, err := getPartFromFile(arg)
 			if err != nil {
 				log.Fatal(err)
@@ -162,9 +162,12 @@ func runPromptCmd(cmd *cobra.Command, args []string) {
 	}
 }
 
+// argLooksLikeFilename says if command-line argument looks like a filename,
+// which we consider to have an alphabetical extension following a dot separator,
+// but not look like a URL.
 func argLooksLikeFilename(arg string) bool {
-	ext := filepath.Ext(arg)
-	return ext != ""
+	re := regexp.MustCompile(`\.[a-zA-Z]+$`)
+	return re.MatchString(arg) && strings.Index(arg, "://") < 0
 }
 
 func argLooksLikeURL(arg string) bool {
