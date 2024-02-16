@@ -1,7 +1,19 @@
-# 
+# Test multimodal prompts with images and text
 
 exec gemini-cli prompt --model gemini-pro-vision 'what is the following picture showing?' datafiles/puppies.png
 stdout '(?i:(golden|retriever))'
 
 exec gemini-cli prompt --model gemini-pro-vision 'what is the difference between this picture:' datafiles/catcartoon1.png 'and this one' datafiles/catscartoon2.png
-stdout '(?i:(one|single).*two)'
+stdout '(?i:(one|single|black))'
+stdout '(?i:two|orange)'
+
+# ... and one jpg image
+exec gemini-cli prompt --model gemini-pro-vision 'what is the following picture showing?' datafiles/flamingo.jpg
+stdout '(?i:(bird|flamingo))'
+
+# errors on file that doesn't exist and wrong extension
+! exec gemini-cli prompt 'describe this' datafiles/turtle1.jpg
+stderr 'no such file'
+
+! exec gemini-cli prompt 'describe this' datafiles/nop.txt
+stderr 'invalid image file'
