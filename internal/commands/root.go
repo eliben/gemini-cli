@@ -27,5 +27,5 @@ func Execute() int {
 
 func init() {
 	rootCmd.PersistentFlags().String("key", "", "API key for Google AI")
-	rootCmd.PersistentFlags().String("model", "gemini-pro", "Name of model to use")
+	rootCmd.PersistentFlags().String("model", "gemini-pro", "Name of model to use; see https://ai.google.dev/models/gemini")
 }

@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/eliben/gemini-cli/internal/apikey"
@@ -33,6 +35,9 @@ The prompts are sent as a sequence to the model in the order provided.
 If --system is provided, it's prepended to the other prompts.
 
 TODO: support images with filenames and URLs
+If you're providing multi-modal prompts (e.g. with images), make sure to
+select an appropriate model like gemini-pro-vision
+(see https://ai.google.dev/models/gemini for a list of model names).
 `
 
 func init() {
@@ -65,6 +70,12 @@ func runPromptCmd(cmd *cobra.Command, args []string) {
 			}
 			promptParts = append(promptParts, genai.Text(string(b)))
 			seenStdin = true
+		} else if argLooksLikeFilename(arg) {
+			part, err := getPartFromFile(arg)
+			if err != nil {
+				log.Fatal(err)
+			}
+			promptParts = append(promptParts, part)
 		} else {
 			promptParts = append(promptParts, genai.Text(arg))
 		}
@@ -138,5 +149,27 @@ func runPromptCmd(cmd *cobra.Command, args []string) {
 				fmt.Println("<empty response from model>")
 			}
 		}
+	}
+}
+
+func argLooksLikeFilename(arg string) bool {
+	ext := filepath.Ext(arg)
+	return ext != ""
+}
+
+func getPartFromFile(path string) (genai.Part, error) {
+	b, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+
+	ext := filepath.Ext(path)
+	switch strings.TrimSpace(ext) {
+	case ".jpg", ".jpeg":
+		return genai.ImageData("jpeg", b), nil
+	case ".png":
+		return genai.ImageData("png", b), nil
+	default:
+		return nil, fmt.Errorf("invalid image file extension: %s", ext)
 	}
 }
