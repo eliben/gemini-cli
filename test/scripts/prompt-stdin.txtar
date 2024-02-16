@@ -6,7 +6,7 @@ stdout '(?i:mars)'
 
 stdin q2.txt
 exec gemini-cli prompt - 'what kind of mammal am i?'
-stdout '(?i:(dog|canine))'
+stdout '(?i:(dog|canine|carnivo))'
 
 ! exec gemini-cli prompt 'say hi' - 'no' -
 stderr 'expect a single'

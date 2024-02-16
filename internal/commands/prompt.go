@@ -35,7 +35,6 @@ If --system is provided, it's prepended to the other prompts.
 TODO: support images with filenames and URLs
 `
 
-// TODO: fix reading stdin from -
 func init() {
 	rootCmd.AddCommand(promptCmd)
 
@@ -86,6 +85,14 @@ func runPromptCmd(cmd *cobra.Command, args []string) {
 		},
 		{
 			Category:  genai.HarmCategoryHarassment,
+			Threshold: genai.HarmBlockNone,
+		},
+		{
+			Category:  genai.HarmCategoryHateSpeech,
+			Threshold: genai.HarmBlockNone,
+		},
+		{
+			Category:  genai.HarmCategorySexuallyExplicit,
 			Threshold: genai.HarmBlockNone,
 		},
 	}
