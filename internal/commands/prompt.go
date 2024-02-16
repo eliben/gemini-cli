@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
@@ -16,8 +18,8 @@ import (
 	"google.golang.org/api/option"
 )
 
-// TODO: multi-part prompt (multiple arguments), can also be an opening for
-// images from files/URLs
+// TODO: implement loading files from URL
+// improve documentation
 var promptCmd = &cobra.Command{
 	Use:     "prompt <prompt or '-'>...",
 	Aliases: []string{"p", "ask"},
@@ -70,7 +72,15 @@ func runPromptCmd(cmd *cobra.Command, args []string) {
 			}
 			promptParts = append(promptParts, genai.Text(string(b)))
 			seenStdin = true
+		} else if argLooksLikeURL(arg) {
+			part, err := getPartFromURL(arg)
+			if err != nil {
+				log.Fatal(err)
+			}
+			promptParts = append(promptParts, part)
 		} else if argLooksLikeFilename(arg) {
+			// TODO: this is too permissive... it will detect all URLs too!
+			// need a better heuristic
 			part, err := getPartFromFile(arg)
 			if err != nil {
 				log.Fatal(err)
@@ -157,6 +167,14 @@ func argLooksLikeFilename(arg string) bool {
 	return ext != ""
 }
 
+func argLooksLikeURL(arg string) bool {
+	_, err := url.ParseRequestURI(arg)
+	if err != nil {
+		return false
+	}
+	return true
+}
+
 func getPartFromFile(path string) (genai.Part, error) {
 	b, err := os.ReadFile(path)
 	if err != nil {
@@ -172,4 +190,25 @@ func getPartFromFile(path string) (genai.Part, error) {
 	default:
 		return nil, fmt.Errorf("invalid image file extension: %s", ext)
 	}
+}
+
+func getPartFromURL(url string) (genai.Part, error) {
+	resp, err := http.Get(url)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch image from url: %w", err)
+	}
+	defer resp.Body.Close()
+
+	urlData, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read image bytes: %w", err)
+	}
+
+	mimeType := resp.Header.Get("Content-Type")
+	parts := strings.Split(mimeType, "/")
+	if len(parts) != 2 {
+		return nil, fmt.Errorf("invalid mime type %v", mimeType)
+	}
+
+	return genai.ImageData(parts[1], urlData), nil
 }

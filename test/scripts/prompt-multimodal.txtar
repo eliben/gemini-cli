@@ -3,13 +3,18 @@
 exec gemini-cli prompt --model gemini-pro-vision 'what is the following picture showing?' datafiles/puppies.png
 stdout '(?i:(golden|retriever))'
 
-exec gemini-cli prompt --model gemini-pro-vision 'what is the difference between this picture:' datafiles/catcartoon1.png 'and this one' datafiles/catscartoon2.png
+exec gemini-cli prompt --model gemini-pro-vision 'what is the difference between this picture:' datafiles/catcartoon1.png 'and this one' datafiles/catscartoon2.png '; be specific'
 stdout '(?i:(one|single|black))'
 stdout '(?i:two|orange)'
 
 # ... and one jpg image
 exec gemini-cli prompt --model gemini-pro-vision 'what is the following picture showing?' datafiles/flamingo.jpg
 stdout '(?i:(bird|flamingo))'
+
+# Point to URL
+# TODO: reroute this to owr own repo when public
+exec gemini-cli prompt --model gemini-pro-vision 'describe this:' https://github.com/tmc/langchaingo/blob/main/docs/static/img/parrot-icon.png?raw=true
+stdout '(?i:(parrot|bird))'
 
 # errors on file that doesn't exist and wrong extension
 ! exec gemini-cli prompt 'describe this' datafiles/turtle1.jpg
