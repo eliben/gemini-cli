@@ -1,0 +1,5 @@
+exec gemini-cli -v
+stdout 'v0.'
+
+exec gemini-cli --version
+stdout 'v0.'
