@@ -62,6 +62,8 @@ github.com/google/generative-ai-go v0.6.0 h1:nVHzAYu/k3ToeFYbU/EOI15XfDHfMeYvsej
 github.com/google/generative-ai-go v0.6.0/go.mod h1:8fXQk4w+eyTzFokGGJrBFL0/xwXqm3QNhTqOWyX11zs=
 github.com/google/generative-ai-go v0.7.0 h1:QniOhLDdUFr3i+iZD8+M45GDdTxnvIRo51pOe5OmVz0=
 github.com/google/generative-ai-go v0.7.0/go.mod h1:8fXQk4w+eyTzFokGGJrBFL0/xwXqm3QNhTqOWyX11zs=
+github.com/google/generative-ai-go v0.8.0 h1:sbpEC4rdjby19jehqmQ5pF0eXDTGHmNhXuNN+elfC5I=
+github.com/google/generative-ai-go v0.8.0/go.mod h1:8fXQk4w+eyTzFokGGJrBFL0/xwXqm3QNhTqOWyX11zs=
 github.com/google/go-cmp v0.2.0/go.mod h1:oXzfMopK8JAjlY9xF4vHSVASa0yLyX7SntLO5aqRK0M=
 github.com/google/go-cmp v0.3.0/go.mod h1:8QqcDgzrUqlUb/G2PQTWiueGozuR1884gddMywk6iLU=
 github.com/google/go-cmp v0.3.1/go.mod h1:8QqcDgzrUqlUb/G2PQTWiueGozuR1884gddMywk6iLU=

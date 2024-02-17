@@ -4,6 +4,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// TODO: add version command that prints a version from - tag?
+// try https://blog.carlana.net/post/2023/golang-git-hash-how-to/
+// ReadBuildInfo
+
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "gemini-cli <command>",
