@@ -1,0 +1,44 @@
+# Test --id-conflic strategies
+exec gemini-cli embed db out.db input.csv
+stderr 'Found 3 values'
+
+# The default is "error"
+! exec gemini-cli embed db out.db input2.csv
+stderr 'unable to insert'
+
+# ... also try passing explicitly
+! exec gemini-cli embed db --id-conflict=error out.db input2.csv
+stderr 'unable to insert'
+
+# Now "skip" and "replace"
+
+# ... create initial DB
+exec gemini-cli embed db out2.db --store input.csv
+exec sqlite3 out2.db 'select id, content from embeddings'
+stdout '3|.*luci'
+
+# ... try to embed input2 now, note that the content for id=3 didn't change
+exec gemini-cli embed db out2.db --store input2.csv --id-conflict skip
+exec sqlite3 out2.db 'select id, content from embeddings'
+stdout '3|.*luci'
+
+# ... now try to embed with "replace", note that the content for id=3 changed
+exec gemini-cli embed db out2.db --store input2.csv --id-conflict replace
+exec sqlite3 out2.db 'select id, content from embeddings'
+stdout '3|.*jaja'
+
+exec sqlite3 out2.db 'select count(*) from embeddings'
+stdout 5
+
+
+-- input.csv --
+id,name,age
+3,luci,23
+4,merene,29
+5,pat,52
+
+-- input2.csv --
+id,name,age
+3,jaja,70
+9,aliad,90
+812,nemert,2

@@ -39,7 +39,8 @@ operation based on flags.
   computed on this text. The --attach flag can provide an alternative DB file so
   the SQL query can read from it.
 * With --files or --files-list, the inputs are taken from the filesystem, each
-  file becoming the contents to be embedded.
+  file becoming the contents to be embedded. The file name or path becomes
+  the ID.
 * Otherwise, the input is read from a file provided as an argument (or '-',
   which reads from standard input). The format of the file should be either CSV,
   TSV (tab-separated), JSON or JSONLines (one line per JSON object). At least 2
@@ -64,6 +65,7 @@ picking all the files that match the glob`))
 	embedDBCmd.Flags().Bool("store", false, `also store the original content in the embeddings table ('content' column)`)
 	embedDBCmd.Flags().String("metadata", "", `also store this metadata in the embeddings table ('metadata' column)`)
 	embedDBCmd.Flags().String("prefix", "", `prepend a prefix to the stored ID of each row`)
+	embedDBCmd.Flags().String("id-conflict", "error", `what to do when inserting IDs that already exist: "error", "replace" or "skip"`)
 }
 
 func runEmbedDBCmd(cmd *cobra.Command, args []string) {
@@ -260,8 +262,21 @@ func runEmbedDBCmd(cmd *cobra.Command, args []string) {
 		numColumns++
 	}
 
-	query := fmt.Sprintf("INSERT INTO %s VALUES (%s)",
-		tableName, strings.Join(strings.Split(strings.Repeat("?", numColumns), ""), ", "))
+	idConflictStrategy := mustGetStringFlag(cmd, "id-conflict")
+	insertOr := ""
+	switch idConflictStrategy {
+	case "error":
+		// Don't add anything; the SQL INSERT will error out on conflcts.
+	case "skip":
+		insertOr = "OR IGNORE"
+	case "replace":
+		insertOr = "OR REPLACE"
+	default:
+		log.Fatal("invalid value of --id-conflict flag")
+	}
+
+	query := fmt.Sprintf("INSERT %s INTO %s VALUES (%s)",
+		insertOr, tableName, strings.Join(strings.Split(strings.Repeat("?", numColumns), ""), ", "))
 
 	for i, emb := range embs {
 		id := ids[i]
@@ -278,7 +293,7 @@ func runEmbedDBCmd(cmd *cobra.Command, args []string) {
 		}
 		_, err = db.Exec(query, columns...)
 		if err != nil {
-			log.Fatal("unable to insert embedding into DB", err)
+			log.Fatalf("unable to insert embedding into DB (id = %v): %v", id, err)
 		}
 	}
 
