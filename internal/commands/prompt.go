@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/eliben/gemini-cli/internal/apikey"
@@ -49,6 +50,10 @@ func init() {
 
 	promptCmd.Flags().StringP("system", "s", "", "set a system prompt")
 	promptCmd.Flags().Bool("stream", true, "stream the response from the model")
+
+	// The temperature setting is a string because we want to set it only if
+	// the user provided it explicitly, keeping the model's default otherwise.
+	promptCmd.Flags().String("temp", "", "temperature setting for the model")
 }
 
 func runPromptCmd(cmd *cobra.Command, args []string) {
@@ -99,6 +104,15 @@ func runPromptCmd(cmd *cobra.Command, args []string) {
 	defer client.Close()
 
 	model := client.GenerativeModel(mustGetStringFlag(cmd, "model"))
+
+	if tempValue := mustGetStringFlag(cmd, "temp"); tempValue != "" {
+		f, err := strconv.ParseFloat(tempValue, 32)
+		if err != nil {
+			log.Fatalf("problem parsing --temp value: %v", err)
+		}
+		model.SetTemperature(float32(f))
+	}
+
 	model.SafetySettings = []*genai.SafetySetting{
 		{
 			Category:  genai.HarmCategoryDangerousContent,
