@@ -1,12 +1,11 @@
 package commands
 
 import (
+	"fmt"
+
+	"github.com/eliben/gemini-cli/internal/version"
 	"github.com/spf13/cobra"
 )
-
-// TODO: add version command that prints a version from - tag?
-// try https://blog.carlana.net/post/2023/golang-git-hash-how-to/
-// ReadBuildInfo
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -17,6 +16,7 @@ command-line.`,
 	CompletionOptions: cobra.CompletionOptions{
 		DisableDefaultCmd: true,
 	},
+	Run: runRootCmd,
 }
 
 // Execute adds all child commands to the root command and sets flags
@@ -32,4 +32,14 @@ func Execute() int {
 func init() {
 	rootCmd.PersistentFlags().String("key", "", "API key for Google AI")
 	rootCmd.PersistentFlags().String("model", "gemini-pro", "Name of model to use; see https://ai.google.dev/models/gemini")
+
+	rootCmd.Flags().BoolP("version", "v", false, `print version info and exit`)
+}
+
+func runRootCmd(cmd *cobra.Command, args []string) {
+	if mustGetBoolFlag(cmd, "version") {
+		fmt.Println(version.Version)
+	} else {
+		cmd.Usage()
+	}
 }
