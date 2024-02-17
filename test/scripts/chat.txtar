@@ -1,4 +1,3 @@
-
 stdin qq.txt
 
 exec gemini-cli chat

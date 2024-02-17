@@ -1,0 +1,3 @@
+exec gemini-cli models
+stdout 'Description'
+stdout 'gemini-1.0-pro'

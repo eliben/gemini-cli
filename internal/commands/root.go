@@ -4,8 +4,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// TODO: Add "models" command that prints information about models
-
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "gemini-cli <command>",
