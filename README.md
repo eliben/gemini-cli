@@ -164,6 +164,51 @@ like a C++ file (i.e. ending with `.h`, `.hpp`, `.cpp`, `.cxx` and so on) in the
 $ gemini-cli embed db out-db --files-list $(pss -f --cpp | paste -sd,)
 ```
 
+**SQLite DB input**: when passed the `--sql` flag, `gemini-cli` takes inputs from the SQLite
+DB itself, or any other SQLite DB file. The flag value is a SQL `select` statement that should
+select at least two columns; the first one will be taken as the ID, and the others are
+concatenated to become the value passed to the embedding model.
+
+For example, if `out.db` already has a table named `docs` with the column names `id` and `content`,
+this call will embed the contents of each row and place the output in the `embeddings` table:
+
+```
+$ gemini-cli embed db out.db --sql "select id, content from docs"
+```
+
+With the `--attach` flag, we can also ask `gemini-cli` to read inputs from other SQLite DB files.
+For example:
+
+```
+$ gemini-cli embed db out.db --attach inp,input.db --sql "select id, content from inp.docs"
+```
+
+Will read the inputs from `input.db` and write embedding outputs to `out.db`.
+
+**Tabular input**: without additional flags, `gemini-cli` will expect a filename or `-` following
+the output DB name. This file (or data piped from standard input in case of `-`) is expected to
+be in either CSV, TSV (tab-separated values), JSON or [JSONLines](https://jsonlines.org/) format
+and include a list of records that has an ID field and some arbitrary number of other fields that
+are all concatenated to create the content for the record. The content is embedded and the result
+is associated with the ID in the output SQLite DB.
+
+For example:
+
+```
+$ cat input.csv
+id,name,age
+3,luci,23
+4,merene,29
+5,pat,52
+$ cat input.csv | gemini-cli embed db out.db -
+```
+
+Will embed each record from the input file and create 3 rows in the `embeddings` table associated
+with the IDs 3, 4 and 5. In this mode, `gemini-cli` auto-detects the format of the file passed
+into it without relying on its extension (note that it's unaware of the extension when the input
+is piped through standard input).
+
+
 
 
 
