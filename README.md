@@ -27,7 +27,7 @@ subcommand and its flags.
 
 This guide will discuss some of the more common use cases.
 
-## Models
+### Models
 
 The list of Gemini models supported by the backend is available on [this page](https://ai.google.dev/models/gemini).
 You can run `gemini-cli models` to ask the tool to print a list of model names it's familiar
@@ -41,7 +41,7 @@ This is a single-shot interaction; the LLM will have no memory of previous promp
 that `chat` command for with-memory interactions).
 
 ```
-gemini-cli prompt <prompt or '-'>... [flags]
+$ gemini-cli prompt <prompt or '-'>... [flags]
 ```
 
 The prompt can be provided as a sequence of parts, each one a command-line argument.
@@ -57,11 +57,11 @@ Some examples:
 
 ```
 # Simple single prompt
-gemini-cli prompt "why is the sky blue?"
+$ gemini-cli prompt "why is the sky blue?"
 
 # Multi-modal prompt with image file. Note that we have to ask for a
 # vision-capable model explicitly
-gemini-cli prompt --model gemini-pro-vision "describe this image:" test/datafiles/puppies.png
+$ gemini-cli prompt --model gemini-pro-vision "describe this image:" test/datafiles/puppies.png
 ```
 
 ### `chat` - in-terminal chat with a model
@@ -72,7 +72,7 @@ has a memory of your previous prompts and its own replies (within the model's co
 limit). Example:
 
 ```
-gemini-cli chat
+$ gemini-cli chat
 Chatting with gemini-1.0-pro
 Type 'exit' or 'quit' to exit
 > name 3 dog breeds
@@ -89,6 +89,48 @@ German Shepherds are typically the heaviest of the three breeds, with males
 [...]
 > 
 ```
+
+### `counttok` - counting tokens
+
+We can ask the Gemini API to count the number of tokens in a given prompt or list of prompts.
+`gemini-cli` supports this with the `counttok` command. Examples:
+
+```
+$ gemini-cli counttok "why is the sky blue?"
+
+$ cat textfile.txt | gemini-cli counttok -
+```
+
+### Embeddings
+
+Some of `gemini-cli`'s most advanced capabilities are in interacting with Gemini's embedding
+models. `gemini-cli` uses SQLite to store embeddings for a potentially large number of inputs
+and query these embeddings for similarity. This is all done through subcommands of the `embed`
+command.
+
+#### `embed content` - embedding a single piece of content
+
+Useful for kicking the tires of embeddings, this subcommand lets us embed a single prompt taken
+from the command-line or a file, and print out its embedding in various formats (controlled with
+the `--format` flag). Examples:
+
+```
+$ gemini-cli embed content "why is the sky blue?"
+
+$ cat textfile.txt | gemini-cli embed content -
+```
+
+#### `embed db` - embedding multiple contents, storing results in a DB
+
+`embed db` is a swiss-army knife subcommand for embedding multiple pieces of text and storing the
+results in a SQLite DB. It takes different kinds of inputs: from a table listing contents, from
+the file system or from the DB itself.
+
+
+
+
+
+
 
 
 
