@@ -123,8 +123,31 @@ $ cat textfile.txt | gemini-cli embed content -
 #### `embed db` - embedding multiple contents, storing results in a DB
 
 `embed db` is a swiss-army knife subcommand for embedding multiple pieces of text and storing the
-results in a SQLite DB. It takes different kinds of inputs: from a table listing contents, from
-the file system or from the DB itself.
+results in a SQLite DB. It supports different kinds of inputs: a table listing contents,
+the file system or the DB itself.
+
+All variations of `embed db` take the path of a DB file to use as output. If the file exists, it's
+expected to be a valid SQLite DB; otherwise, a new DB is created in that path. `gemini-cli` will
+store the results of embedding calculations in this DB in the `embeddings` table (this name can
+be configured with the `--table` flag), with this SQL schema:
+
+```
+id TEXT PRIMARY KEY
+embedding BLOB
+```
+
+The `id` is taken from the input, based on its type. We'll go through the different variants of
+input next.
+
+TODO
+
+
+## Acknowledgements
+
+`gemini-cli` is inspired by Simon Willison's [llm tool](https://llm.datasette.io/en/stable/), but
+aimed at the Go ecosystem. [Simon's website](https://simonwillison.net/) is a treasure trove of
+information about LLMs, embeddings and building tools that use them - check it out!
+
 
 
 
