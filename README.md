@@ -208,8 +208,25 @@ with the IDs 3, 4 and 5. In this mode, `gemini-cli` auto-detects the format of t
 into it without relying on its extension (note that it's unaware of the extension when the input
 is piped through standard input).
 
+**Other flags**: `embed db` has some additional flags that affect its behavior for all input
+modes. Run `gemini help embed db` details.
 
+#### `embed similar` - finding similar items from an embeddings table
 
+Once an `embeddings` table was computed with `embed db`, we can use the `embed similar` command
+to find values that are most similar (in terms of distance in embedding vector space) to some
+content. For example:
+
+```
+$ gemini-cli embed similar out.db somefile.txt
+```
+
+Will embed the contents of `somefile.txt`, then compare its embedding vector with the embeddings
+stored in the `embeddings` table of `out.db`, and print out the 5 closest entries (this number can
+be controlled with the `--topk` flag).
+
+By default, `embed similar` will emit the ID of the similar entry and the similarity score for
+each record. The `--show` flag can be used to control which columns from the DB are printed out.
 
 
 ## Acknowledgements
