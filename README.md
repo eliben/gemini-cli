@@ -139,7 +139,32 @@ embedding BLOB
 The `id` is taken from the input, based on its type. We'll go through the different variants of
 input next.
 
-TODO
+**Filesystem input**: when passed the `--files` or `--files-list` flag, `gemini-cli` takes inputs
+as files from the filesystem. Each file is one input: its path is the ID, and its contents are
+passed to the embedding model.
+
+With `--files`, the flag value is a comma-separated pair of `<root directory>,<glob pattern>`;
+the root directory is walked recursively and every file matching the glob pattern is included
+in the input. For example:
+
+```
+$ gemini-cli embed db out.db --files somedir,*.txt
+```
+
+Embeds every `.txt` file found in `somedir` or any of its sub-directories. The ID for each file will
+be its path starting with `dir/`.
+
+With `--files-list`, the flag value is a comma-separated pair of filenames. Each name becomes an
+ID and the file's concents are passed to the embedding model. This can be useful for more
+sophisticated patterns that are difficult to express using a simple glob; for example, using
+[pss](https://github.com/eliben/pss/) and the `paste` command, this embeds any file that looks
+like a C++ file (i.e. ending with `.h`, `.hpp`, `.cpp`, `.cxx` and so on) in the current directory:
+
+```
+$ gemini-cli embed db out-db --files-list $(pss -f --cpp | paste -sd,)
+```
+
+
 
 
 ## Acknowledgements
@@ -147,16 +172,3 @@ TODO
 `gemini-cli` is inspired by Simon Willison's [llm tool](https://llm.datasette.io/en/stable/), but
 aimed at the Go ecosystem. [Simon's website](https://simonwillison.net/) is a treasure trove of
 information about LLMs, embeddings and building tools that use them - check it out!
-
-
-
-
-
-
-
-
-
-
-
-
-
