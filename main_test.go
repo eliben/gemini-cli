@@ -28,11 +28,11 @@ func TestScript(t *testing.T) {
 				filepath.Join(rootdir, "test", "datafiles"),
 				filepath.Join(env.WorkDir, "datafiles"))
 
-			// Propagate the test env's API_KEY to scripts.
-			env.Setenv("API_KEY", os.Getenv("API_KEY"))
+			// Propagate the test env's GEMINI_API_KEY to scripts.
+			env.Setenv("GEMINI_API_KEY", os.Getenv("GEMINI_API_KEY"))
 
 			// This is to help testing some error scenarios.
-			env.Setenv("TEST_API_KEY", os.Getenv("API_KEY"))
+			env.Setenv("TEST_API_KEY", os.Getenv("GEMINI_API_KEY"))
 			return nil
 		},
 	})

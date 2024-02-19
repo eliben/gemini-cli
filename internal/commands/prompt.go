@@ -34,7 +34,7 @@ Send a prompt to the LLM. The prompt can be provided as a sequence of parts,
 each one a command-line argument.
 
 The arguments are sent as a sequence to the model in the order provided.
-If --system is provided, it's prepended to the other argument. An argument
+If --system is provided, it's prepended to the other arguments. An argument
 can be some quoted text, a name of an image file on the local filesystem or
 a URL pointing directly to an image file online. A special argument with
 the value '-' instructs the tool to read this prompt part from standard input.

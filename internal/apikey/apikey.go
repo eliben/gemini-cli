@@ -16,7 +16,7 @@ func Get(cmd *cobra.Command) string {
 		return token
 	}
 
-	key := os.Getenv("API_KEY")
+	key := os.Getenv("GEMINI_API_KEY")
 	if len(key) > 0 {
 		return key
 	}

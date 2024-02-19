@@ -1,7 +1,7 @@
-# By default, all tests run with API_KEY set to a valid key. Here we try
+# By default, all tests run with GEMINI_API_KEY set to a valid key. Here we try
 # disabling the key to observe an error.
 
-env API_KEY=
+env GEMINI_API_KEY=
 
 ! exec gemini-cli prompt 'what does a dozen mean?' --temp 0.0
 stderr 'Unable to obtain API'
@@ -12,7 +12,7 @@ exec gemini-cli prompt --key $TEST_API_KEY 'what does a dozen mean?' --temp 0.0
 stdout '(?i:(12|twelve))'
 
 # ... or by setting it anew
-env API_KEY=$TEST_API_KEY
+env GEMINI_API_KEY=$TEST_API_KEY
 
 exec gemini-cli prompt 'what does a dozen mean?' --temp 0.0
 stdout '(?i:(12|twelve))'

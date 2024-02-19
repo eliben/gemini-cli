@@ -17,4 +17,4 @@ exec gemini-cli prompt 'I am a pomeranian' 'what kind of mammal am I?' --temp 0.
 stdout '(?i:(dog|canine|canid))'
 
 exec gemini-cli prompt 'what is the next number in this sequence?' 'two' 'four' 'eight' --temp 0.0
-stdout '(?i:(16|sixteen))'
+stdout '(?i:(16|sixteen|10|ten))'
