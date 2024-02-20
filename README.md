@@ -16,9 +16,10 @@ You can then invoke `gemini-cli help` to verify it's properly installed and foun
 
 ## Usage
 
-All `gemini-cli` invocations require the API key for https://ai.google.dev/ to be provided,
-either via the `--key` flag or an environment variable called `GEMINI_API_KEY`. From here
-one, all examples assume environment variable was set earlier to a valid key.
+All `gemini-cli` invocations require an API key for https://ai.google.dev/ to be provided,
+either via the `--key` flag or an environment variable called `GEMINI_API_KEY`. You can
+visit that page to obtain a key - there's a generous free tier!
+From here on, all examples assume the environment variable was set earlier to a valid key.
 
 `gemini-cli` has a nested tree of subcommands to perform various tasks. You can always
 run `gemini-cli help <command> [subcommand]...` to get usage; e.g. `gemini-cli help chat`
