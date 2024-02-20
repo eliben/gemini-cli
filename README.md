@@ -1,6 +1,6 @@
 # gemini-cli
 
-`gemini-cli` is a simple yet powerful command-line interface for Google's Gemini LLMs,
+`gemini-cli` is a simple yet versatile command-line interface for Google's Gemini LLMs,
 written in Go. It includes tools for chatting with these models and
 generating / comparing embeddings, with powerful SQLite storage and analysis capabilities.
 
