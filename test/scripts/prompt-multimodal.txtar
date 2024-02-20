@@ -12,9 +12,8 @@ exec gemini-cli prompt --model gemini-pro-vision 'what is the following picture 
 stdout '(?i:(bird|flamingo))'
 
 # Point to URL
-# TODO: reroute this to owr own repo when public
-exec gemini-cli prompt --model gemini-pro-vision 'describe this:' https://github.com/tmc/langchaingo/blob/main/docs/static/img/parrot-icon.png?raw=true
-stdout '(?i:(parrot|bird))'
+exec gemini-cli prompt --model gemini-pro-vision 'describe this:' https://github.com/eliben/gemini-cli/blob/main/test/datafiles/puppies.png?raw=true
+stdout '(?i:(golden|retriever))'
 
 # errors on file that doesn't exist and wrong extension
 ! exec gemini-cli prompt 'describe this' datafiles/turtle1.jpg
