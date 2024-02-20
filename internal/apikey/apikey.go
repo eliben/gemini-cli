@@ -21,6 +21,6 @@ func Get(cmd *cobra.Command) string {
 		return key
 	}
 
-	log.Fatal("Unable to obtain API key for Google AI; use --key or API_KEY env var")
+	log.Fatal("Unable to obtain API key for Google AI; use --key or GEMINI_API_KEY env var")
 	return ""
 }
