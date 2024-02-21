@@ -131,7 +131,7 @@ func runEmbedSimilarCmd(cmd *cobra.Command, args []string) {
 	})
 
 	showList := mustGetStringSliceFlag(cmd, "show")
-	for i := 0; i < mustGetIntFlag(cmd, "topk"); i++ {
+	for i := 0; i < min(len(dbEntries), mustGetIntFlag(cmd, "topk")); i++ {
 		display := make(map[string]string)
 		for _, col := range showList {
 			if col == "score" {
