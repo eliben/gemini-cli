@@ -174,7 +174,7 @@ func runEmbedDBCmd(cmd *cobra.Command, args []string) {
 		} else {
 			file, err := os.Open(inputFilename)
 			if err != nil {
-				log.Fatal("unable to open %v: %v", inputFilename, err)
+				log.Fatalf("unable to open %v: %v", inputFilename, err)
 			}
 			inputReader = file
 		}
