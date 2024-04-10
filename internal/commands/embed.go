@@ -17,5 +17,5 @@ var embedCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(embedCmd)
-	embedCmd.PersistentFlags().StringP("model", "m", "embedding-001", "name of embedding model to use")
+	embedCmd.PersistentFlags().StringP("model", "m", "text-embedding-004", "name of embedding model to use")
 }
