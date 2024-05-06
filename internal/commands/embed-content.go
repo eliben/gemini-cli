@@ -10,10 +10,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/eliben/gemini-cli/internal/apikey"
 	"github.com/google/generative-ai-go/genai"
 	"github.com/spf13/cobra"
-	"google.golang.org/api/option"
 )
 
 var embedContentCmd = &cobra.Command{
@@ -39,7 +37,6 @@ func init() {
 }
 
 func runEmbedContentCmd(cmd *cobra.Command, args []string) {
-	key := apikey.Get(cmd)
 	content := args[0]
 
 	if content == "-" {
@@ -51,7 +48,7 @@ func runEmbedContentCmd(cmd *cobra.Command, args []string) {
 	}
 
 	ctx := context.Background()
-	client, err := genai.NewClient(ctx, option.WithAPIKey(key))
+	client, err := newGenaiClient(ctx, cmd)
 	if err != nil {
 		log.Fatal()
 	}

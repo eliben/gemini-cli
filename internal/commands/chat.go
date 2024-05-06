@@ -8,11 +8,9 @@ import (
 	"os"
 	"strings"
 
-	"github.com/eliben/gemini-cli/internal/apikey"
 	"github.com/google/generative-ai-go/genai"
 	"github.com/spf13/cobra"
 	"google.golang.org/api/iterator"
-	"google.golang.org/api/option"
 )
 
 var chatCmd = &cobra.Command{
@@ -27,10 +25,8 @@ func init() {
 }
 
 func runChatCmd(cmd *cobra.Command, args []string) {
-	key := apikey.Get(cmd)
-
 	ctx := context.Background()
-	client, err := genai.NewClient(ctx, option.WithAPIKey(key))
+	client, err := newGenaiClient(ctx, cmd)
 	if err != nil {
 		log.Fatal(err)
 	}

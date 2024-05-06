@@ -12,10 +12,8 @@ import (
 	"strings"
 
 	"github.com/chewxy/math32"
-	"github.com/eliben/gemini-cli/internal/apikey"
 	"github.com/google/generative-ai-go/genai"
 	"github.com/spf13/cobra"
-	"google.golang.org/api/option"
 )
 
 var embedSimilarCmd = &cobra.Command{
@@ -47,7 +45,6 @@ func init() {
 }
 
 func runEmbedSimilarCmd(cmd *cobra.Command, args []string) {
-	key := apikey.Get(cmd)
 	dbPath := args[0]
 
 	// Read content from argument or stdin
@@ -62,7 +59,7 @@ func runEmbedSimilarCmd(cmd *cobra.Command, args []string) {
 
 	// Calculate the content's embedding vector
 	ctx := context.Background()
-	client, err := genai.NewClient(ctx, option.WithAPIKey(key))
+	client, err := newGenaiClient(ctx, cmd)
 	if err != nil {
 		log.Fatal()
 	}

@@ -13,11 +13,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/eliben/gemini-cli/internal/apikey"
 	"github.com/eliben/gemini-cli/internal/tableloader"
 	"github.com/google/generative-ai-go/genai"
 	"github.com/spf13/cobra"
-	"google.golang.org/api/option"
 )
 
 var embedDBCmd = &cobra.Command{
@@ -69,7 +67,6 @@ picking all the files that match the glob`))
 }
 
 func runEmbedDBCmd(cmd *cobra.Command, args []string) {
-	key := apikey.Get(cmd)
 	dbPath := args[0]
 
 	sqlMode := mustGetStringFlag(cmd, "sql")
@@ -206,7 +203,7 @@ func runEmbedDBCmd(cmd *cobra.Command, args []string) {
 	log.Printf("Found %d values to embed", len(texts))
 
 	ctx := context.Background()
-	client, err := genai.NewClient(ctx, option.WithAPIKey(key))
+	client, err := newGenaiClient(ctx, cmd)
 	if err != nil {
 		log.Fatal(err)
 	}

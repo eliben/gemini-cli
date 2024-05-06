@@ -13,11 +13,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/eliben/gemini-cli/internal/apikey"
 	"github.com/google/generative-ai-go/genai"
 	"github.com/spf13/cobra"
 	"google.golang.org/api/iterator"
-	"google.golang.org/api/option"
 )
 
 var promptCmd = &cobra.Command{
@@ -57,8 +55,6 @@ func init() {
 }
 
 func runPromptCmd(cmd *cobra.Command, args []string) {
-	key := apikey.Get(cmd)
-
 	// Build up parts of prompt.
 	var promptParts []genai.Part
 
@@ -97,7 +93,7 @@ func runPromptCmd(cmd *cobra.Command, args []string) {
 	}
 
 	ctx := context.Background()
-	client, err := genai.NewClient(ctx, option.WithAPIKey(key))
+	client, err := newGenaiClient(ctx, cmd)
 	if err != nil {
 		log.Fatal(err)
 	}
