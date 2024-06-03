@@ -11,7 +11,7 @@ exec gemini-cli embed content 'something else' --format base64
 
 # ... note: this can be sensitive to the stability of the default model's
 # output
-stdout 'V54G'
+stdout 'xIzv'
 
 exec gemini-cli embed content 'yet else' --format base64 -m embedding-001
 stdout 'l28l'
