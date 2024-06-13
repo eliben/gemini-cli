@@ -81,7 +81,7 @@ this mode, the model has a memory of your previous prompts and its own replies
 
 ```
 $ gemini-cli chat
-Chatting with gemini-1.0-pro
+Chatting with gemini-1.5-flash
 Type 'exit' or 'quit' to exit
 > name 3 dog breeds
 1. Golden Retriever
