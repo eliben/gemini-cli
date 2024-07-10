@@ -76,7 +76,6 @@ func runChatCmd(cmd *cobra.Command, args []string) {
 					for _, part := range c.Content.Parts {
 						fmt.Print(part)
 					}
-					fmt.Println()
 				}
 			}
 		}
