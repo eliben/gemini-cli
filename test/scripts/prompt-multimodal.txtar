@@ -1,18 +1,18 @@
 # Test multimodal prompts with images and text
 
-exec gemini-cli prompt --model gemini-pro-vision 'what is the following picture showing?' datafiles/puppies.png
+exec gemini-cli prompt --model gemini-1.5-flash 'what is the following picture showing?' datafiles/puppies.png
 stdout '(?i:(golden|retriever))'
 
-exec gemini-cli prompt --model gemini-pro-vision 'what is the difference between this picture:' datafiles/catcartoon1.png 'and this one' datafiles/catscartoon2.png '; be specific'
+exec gemini-cli prompt --model gemini-1.5-flash 'what is the difference between this picture:' datafiles/catcartoon1.png 'and this one' datafiles/catscartoon2.png '; be specific'
 stdout '(?i:(one|single|black))'
 stdout '(?i:two|orange)'
 
 # ... and one jpg image
-exec gemini-cli prompt --model gemini-pro-vision 'what is the following picture showing?' datafiles/flamingo.jpg
+exec gemini-cli prompt --model gemini-1.5-flash 'what is the following picture showing?' datafiles/flamingo.jpg
 stdout '(?i:(bird|flamingo))'
 
 # Point to URL
-exec gemini-cli prompt --model gemini-pro-vision 'describe this:' https://github.com/eliben/gemini-cli/blob/main/test/datafiles/puppies.png?raw=true
+exec gemini-cli prompt --model gemini-1.5-flash 'describe this:' https://github.com/eliben/gemini-cli/blob/main/test/datafiles/puppies.png?raw=true
 stdout '(?i:(golden|retriever))'
 
 # errors on file that doesn't exist and wrong extension
