@@ -47,7 +47,7 @@ func runChatCmd(cmd *cobra.Command, args []string) {
 
 	session := model.StartChat()
 	fmt.Printf("Chatting with %s\n", modelName)
-	fmt.Println("Type 'exit' or 'quit' to exit")
+	fmt.Println("Type 'exit' or 'quit' to exit, or '$load <file path>' to load a file")
 	reader := bufio.NewReader(os.Stdin)
 
 	for {
@@ -59,7 +59,19 @@ func runChatCmd(cmd *cobra.Command, args []string) {
 			break
 		}
 
-		iter := session.SendMessageStream(ctx, genai.Text(text))
+		var inputPart genai.Part
+		// Detect a special chat command.
+		if path, found := strings.CutPrefix(text, "$load"); found {
+			part, err := getPartFromFile(strings.TrimSpace(path))
+			if err != nil {
+				log.Fatalf("error loading file %s: %v", path, err)
+			}
+			inputPart = part
+		} else {
+			inputPart = genai.Text(text)
+		}
+
+		iter := session.SendMessageStream(ctx, inputPart)
 
 	ResponseIter:
 		for {

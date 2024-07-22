@@ -1,9 +1,20 @@
 stdin qq.txt
-
 exec gemini-cli chat
 stdout '(?i:Spain.*larger.*than Austria)'
+
+stdin qq2.txt
+exec gemini-cli chat
+stdout '20'
 
 -- qq.txt --
 Hi, are you familiar with the countries Spain and Austria? Be very brief.
 Which of these countries has a larger population?
 exit
+
+-- qq2.txt --
+$load numbers.txt
+Which numbers does Joshua consider important?
+exit
+
+-- numbers.txt --
+Hello, my name is Joshua and I consider these numbers important: 20, 99, 1219

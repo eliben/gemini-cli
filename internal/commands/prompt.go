@@ -201,7 +201,8 @@ func getPartFromFile(path string) (genai.Part, error) {
 	case ".png":
 		return genai.ImageData("png", b), nil
 	default:
-		return nil, fmt.Errorf("invalid image file extension: %s", ext)
+		// Otherwise treat file as text
+		return genai.Text(string(b)), err
 	}
 }
 

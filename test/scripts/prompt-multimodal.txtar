@@ -15,9 +15,6 @@ stdout '(?i:(bird|flamingo))'
 exec gemini-cli prompt --model gemini-1.5-flash 'describe this:' https://github.com/eliben/gemini-cli/blob/main/test/datafiles/puppies.png?raw=true
 stdout '(?i:(golden|retriever))'
 
-# errors on file that doesn't exist and wrong extension
+# errors on file that doesn't exist
 ! exec gemini-cli prompt 'describe this' datafiles/turtle1.jpg
 stderr 'no such file'
-
-! exec gemini-cli prompt 'describe this' datafiles/nop.txt
-stderr 'invalid image file'

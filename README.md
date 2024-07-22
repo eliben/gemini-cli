@@ -98,6 +98,10 @@ German Shepherds are typically the heaviest of the three breeds, with males
 > 
 ```
 
+During the chat, it's possible to ask `gemini-cli` to load a file's contents
+to the model instead of sending a textual message; Do this with the
+`$load <path>` command, pointing to an existing file.
+
 ### `counttok` - counting tokens
 
 We can ask the Gemini API to count the number of tokens in a given prompt or
