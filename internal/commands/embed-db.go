@@ -79,7 +79,7 @@ func runEmbedDBCmd(cmd *cobra.Command, args []string) {
 
 	db, err := sql.Open("sqlite3", dbPath)
 	if err != nil {
-		log.Fatalf("unable to open DB at %v", dbPath)
+		log.Fatalf("unable to open DB at '%v': %v", dbPath, err)
 	}
 	defer db.Close()
 
@@ -105,7 +105,7 @@ func runEmbedDBCmd(cmd *cobra.Command, args []string) {
 
 	_, err = db.Exec(tableCreateSchema)
 	if err != nil {
-		log.Fatal("unable to create table in DB: ", tableName)
+		log.Fatalf("unable to create table '%v' in DB: %v", tableName, err)
 	}
 
 	// We extract a list of [id, text] pairs - either from the DB itself (in --sql
