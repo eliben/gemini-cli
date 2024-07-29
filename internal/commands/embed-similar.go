@@ -80,7 +80,7 @@ func runEmbedSimilarCmd(cmd *cobra.Command, args []string) {
 	// Open the DB and read items and their embeddings from the 'embeddings'
 	// table. For each item, calculate its cosine similarity to the content's
 	// embedding.
-	db, err := sql.Open("sqlite3", dbPath)
+	db, err := sql.Open("sqlite", dbPath)
 	if err != nil {
 		log.Fatalf("unable to open DB at %v", dbPath)
 	}

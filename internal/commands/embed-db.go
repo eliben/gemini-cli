@@ -77,7 +77,7 @@ func runEmbedDBCmd(cmd *cobra.Command, args []string) {
 		log.Fatal("--files* mode is mutually exclusive with --sql")
 	}
 
-	db, err := sql.Open("sqlite3", dbPath)
+	db, err := sql.Open("sqlite", dbPath)
 	if err != nil {
 		log.Fatalf("unable to open DB at '%v': %v", dbPath, err)
 	}

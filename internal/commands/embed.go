@@ -1,7 +1,8 @@
 package commands
 
 import (
-	_ "github.com/mattn/go-sqlite3"
+	_ "modernc.org/sqlite"
+
 	"github.com/spf13/cobra"
 )
 
