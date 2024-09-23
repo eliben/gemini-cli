@@ -1,6 +1,6 @@
 module github.com/eliben/gemini-cli
 
-go 1.22.2
+go 1.23.0
 
 require (
 	github.com/chewxy/math32 v1.10.1
