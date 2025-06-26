@@ -1,3 +1,11 @@
+> [!WARNING]
+> This project is archived; the Gemini SDKs it's using have been deprecated
+> in 2025 and replaced by a new unified Go Gemini SDK. Moreover, Google
+> released [Gemini CLI](https://github.com/google-gemini/gemini-cli), which
+> uses the same name.
+>
+> Please use alternatives like the [llm tool](https://github.com/simonw/llm).
+
 # gemini-cli
 
 `gemini-cli` is a simple yet versatile command-line interface for Google's
